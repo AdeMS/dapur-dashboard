@@ -1,0 +1,42 @@
+<?php
+/**
+ * Daftar website yang terdaftar (hanya baca).
+ *
+ * @var bool $multiWebsiteAktif
+ * @var array $website
+ */
+$this->headTitle('Website');
+?>
+<div class="container py-4">
+    <?= $this->partial('dashboard::menu', ['menu' => $this->menu, 'ruteAktif' => $this->ruteAktif, 'user' => $this->user, 'tokenCsrf' => $this->tokenCsrf, 'fieldCsrf' => $this->fieldCsrf]) ?>
+    <h1 class="h3 mb-3">Website</h1>
+<?php if (! $this->multiWebsiteAktif) : ?>
+    <p class="text-body-secondary">Multi-website belum aktif pada instalasi ini.</p>
+<?php elseif (! $this->website) : ?>
+    <p class="text-body-secondary">Belum ada website yang terdaftar.</p>
+<?php else : ?>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr><th>Website</th><th>Alias</th><th>Mode</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+<?php foreach ($this->website as $baris) : ?>
+                <tr>
+                    <td><a href="https://<?= $this->escapeHtmlAttr($baris['nama']) ?>/" rel="noopener"><?= $this->escapeHtml($baris['nama']) ?></a></td>
+                    <td><?= $this->escapeHtml(implode(', ', $baris['alias'])) ?></td>
+                    <td><?= $this->escapeHtml($baris['mode']) ?></td>
+                    <td>
+<?php if ($baris['tersedia']) : ?>
+                        <span class="badge text-bg-success">Tersedia</span>
+<?php else : ?>
+                        <span class="badge text-bg-warning">Folder tidak ditemukan</span>
+<?php endif ?>
+                    </td>
+                </tr>
+<?php endforeach ?>
+            </tbody>
+        </table>
+    </div>
+<?php endif ?>
+</div>
