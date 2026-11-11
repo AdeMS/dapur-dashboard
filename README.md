@@ -111,6 +111,8 @@ Session disimpan di `data/cache/session/`, jadi folder `data/cache/` harus bisa 
 - Semua form memakai token CSRF. Keluar hanya bisa lewat POST.
 - Login gagal dibatasi per akun dan per IP selama 15 menit.
 - Status dan hak akses user diperiksa ulang pada setiap request.
+- Setelah login, user diarahkan kembali ke halaman dashboard yang diminta sebelumnya. Alamat itu disimpan di
+  session, bukan di URL, dan hanya alamat di dalam dashboard yang diterima.
 
 ## Uji
 
