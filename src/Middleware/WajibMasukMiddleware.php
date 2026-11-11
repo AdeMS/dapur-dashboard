@@ -19,6 +19,8 @@ final class WajibMasukMiddleware implements MiddlewareInterface
 {
     public const SESI_USER     = 'dashboard.user_id';
     public const SESI_TERAKHIR = 'dashboard.terakhir_aktif';
+    /** Alamat yang diminta sebelum login; dituju lagi setelah login berhasil. */
+    public const SESI_TUJUAN = 'dashboard.tujuan';
 
     public function __construct(
         private readonly DaftarUser $daftar,
@@ -40,7 +42,18 @@ final class WajibMasukMiddleware implements MiddlewareInterface
 
         if ($user === null || ! $user->aktif || ! $this->daftar->punyaAkses($user->id, $this->lingkup)) {
             if ($id !== null) {
-                $sesi->hancurkan();
+                // Session tidak dihancurkan agar alamat tujuan di bawah tetap tersimpan.
+                $sesi->hapus(self::SESI_USER);
+                $sesi->hapus(self::SESI_TERAKHIR);
+                $sesi->gantiId();
+            }
+
+            if ($request->getMethod() === 'GET') {
+                $uri    = $request->getUri();
+                $tujuan = $uri->getPath() . ($uri->getQuery() !== '' ? '?' . $uri->getQuery() : '');
+                if (self::tujuanSah($tujuan, $this->pengaturan)) {
+                    $sesi->simpan(self::SESI_TUJUAN, $tujuan);
+                }
             }
 
             return new RedirectResponse($this->pengaturan->rute('/masuk'));
@@ -49,5 +62,28 @@ final class WajibMasukMiddleware implements MiddlewareInterface
         $sesi->simpan(self::SESI_TERAKHIR, time());
 
         return $handler->handle($request->withAttribute(User::class, $user));
+    }
+
+    /**
+     * Tujuan hanya boleh alamat di dalam dashboard ini, tanpa host lain (mencegah open redirect),
+     * dan bukan halaman masuk atau keluar.
+     */
+    public static function tujuanSah(mixed $tujuan, Pengaturan $pengaturan): bool
+    {
+        if (! is_string($tujuan) || $tujuan === '' || strlen($tujuan) > 2000 || $tujuan[0] !== '/') {
+            return false;
+        }
+
+        if (str_starts_with($tujuan, '//') || str_contains($tujuan, '\\') || preg_match('/[\x00-\x1f\x7f]/', $tujuan) === 1) {
+            return false;
+        }
+
+        $jalur = (string) parse_url($tujuan, PHP_URL_PATH);
+        $dasar = $pengaturan->alamatDasar;
+        if ($dasar !== '' && $jalur !== $dasar && ! str_starts_with($jalur, $dasar . '/')) {
+            return false;
+        }
+
+        return ! in_array($jalur, [$pengaturan->rute('/masuk'), $pengaturan->rute('/keluar')], true);
     }
 }
