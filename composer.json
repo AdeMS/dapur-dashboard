@@ -1,0 +1,54 @@
+{
+    "name": "adems/dapur-dashboard",
+    "description": "Modul dashboard untuk Dapur AdeMS: login dan halaman pengelolaan",
+    "type": "library",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "dapur",
+        "adems",
+        "laminas",
+        "mezzio",
+        "dashboard"
+    ],
+    "homepage": "https://www.adems.id",
+    "authors": [
+        {
+            "name": "Ade M Saragih",
+            "homepage": "https://www.adems.id"
+        }
+    ],
+    "require": {
+        "php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
+        "ext-session": "*",
+        "composer-runtime-api": "^2.0",
+        "laminas/laminas-db": "^2.22",
+        "laminas/laminas-diactoros": "^3.9",
+        "mezzio/mezzio": "^3.28",
+        "mezzio/mezzio-router": "^3.0 || ^4.0",
+        "mezzio/mezzio-template": "^3.0",
+        "psr/container": "^1.1 || ^2.0"
+    },
+    "require-dev": {
+        "adems/dapur-multiwebsite": "^1.1",
+        "phpunit/phpunit": "^11.5"
+    },
+    "suggest": {
+        "adems/dapur-multiwebsite": "Diperlukan untuk halaman daftar website dan dashboard per website"
+    },
+    "autoload": {
+        "psr-4": {
+            "AdeMS\\Dapur\\Dashboard\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AdeMS\\Dapur\\Dashboard\\Test\\": "test/"
+        }
+    },
+    "bin": [
+        "bin/dapur-dashboard"
+    ],
+    "scripts": {
+        "test": "phpunit"
+    }
+}
