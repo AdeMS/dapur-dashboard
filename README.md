@@ -97,10 +97,17 @@ sekali berbeda, buat modul sendiri di folder `module/` website tanpa paket ini.
 ## Perintah
 
 ```bash
-vendor/bin/dapur-dashboard pasang               # membuat tabel, aman diulang
+vendor/bin/dapur-dashboard pasang               # membuat tabel yang belum ada, aman diulang
 vendor/bin/dapur-dashboard buat-admin <email>   # membuat admin, atau menambah akses user yang sudah ada
 vendor/bin/dapur-dashboard ganti-sandi <email>  # mengganti kata sandi
 ```
+
+`pasang` melaporkan setiap tabel: `dibuat` atau `sudah ada`. Tabel yang sudah ada beserta isinya tidak
+diubah; perintah ini tidak pernah menghapus tabel.
+
+Bila email pada `buat-admin` sudah terdaftar, perintah memastikan user itu punya akses ke lingkup yang
+dituju, lalu menawarkan ganti kata sandi dengan jawaban bawaan "tidak". Tawaran ini hanya muncul bila
+perintah dijalankan di terminal; dari skrip, kata sandi tidak diubah.
 
 Session disimpan di `data/cache/session/`, jadi folder `data/cache/` harus bisa ditulis web server.
 
