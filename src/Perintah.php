@@ -6,16 +6,22 @@ namespace AdeMS\Dapur\Dashboard;
 
 use Closure;
 use Laminas\Db\Adapter\Adapter;
+use Laminas\Db\Metadata\Source\Factory;
 
 /** Perintah baris: pasang, buat-admin, ganti-sandi. */
 final class Perintah
 {
-    /** @param Closure(string): string $bacaSandi meminta kata sandi tanpa menampilkannya */
+    /**
+     * @param Closure(string): string      $bacaSandi meminta kata sandi tanpa menampilkannya
+     * @param (Closure(string): string)|null $tanya   meminta jawaban biasa; null bila tidak dijalankan di
+     *                                               terminal, sehingga tidak ada yang ditanyakan
+     */
     public function __construct(
         private readonly Adapter $db,
         private readonly DaftarUser $user,
         private readonly Closure $bacaSandi,
         private readonly string $lingkup,
+        private readonly ?Closure $tanya = null,
     ) {
     }
 
@@ -34,13 +40,22 @@ final class Perintah
         };
     }
 
+    /** Membuat tabel yang belum ada. Tabel yang sudah ada tidak diubah, jadi aman diulang. */
     private function pasang(): int
     {
-        foreach (Skema::perintah($this->db->getPlatform()->getName()) as $sql) {
+        $ada = Factory::createSourceFromAdapter($this->db)->getTableNames();
+
+        foreach (Skema::tabel($this->db->getPlatform()->getName()) as $tabel => $sql) {
+            if (in_array($tabel, $ada, true)) {
+                printf("Tabel %-22s sudah ada%s", $tabel, PHP_EOL);
+                continue;
+            }
+
             $this->db->query($sql, Adapter::QUERY_MODE_EXECUTE);
+            printf("Tabel %-22s dibuat%s", $tabel, PHP_EOL);
         }
 
-        echo 'Tabel dashboard sudah siap.' . PHP_EOL;
+        echo PHP_EOL . 'Tabel dashboard sudah siap; data yang sudah ada tidak diubah.' . PHP_EOL;
 
         return 0;
     }
@@ -53,10 +68,7 @@ final class Perintah
 
         $ada = $this->user->cariEmail($email);
         if ($ada !== null) {
-            $this->user->tambahAkses($ada->id, $this->lingkup);
-            printf("User %s sudah ada. Akses ke '%s' dipastikan ada; kata sandinya tidak diubah.%s", $ada->email, $this->lingkup, PHP_EOL);
-
-            return 0;
+            return $this->userSudahAda($ada);
         }
 
         $sandi = $this->mintaSandiBaru(true);
@@ -64,9 +76,43 @@ final class Perintah
             return 1;
         }
 
-        $id =$this->user->buat($email, $nama ?? $email, $sandi);
+        $id = $this->user->buat($email, $nama ?? $email, $sandi);
         $this->user->tambahAkses($id, $this->lingkup);
         printf("Admin %s dibuat untuk lingkup '%s'.%s", DaftarUser::normalkanEmail($email), $this->lingkup, PHP_EOL);
+
+        return 0;
+    }
+
+    /** Memastikan akses ke lingkup ini, lalu menawarkan ganti kata sandi (bawaan: tidak). */
+    private function userSudahAda(User $user): int
+    {
+        if ($this->user->punyaAkses($user->id, $this->lingkup)) {
+            printf("User %s sudah ada dan sudah memiliki akses ke '%s'.%s", $user->email, $this->lingkup, PHP_EOL);
+        } else {
+            $this->user->tambahAkses($user->id, $this->lingkup);
+            printf("User %s sudah ada; akses admin ke '%s' ditambahkan.%s", $user->email, $this->lingkup, PHP_EOL);
+        }
+
+        if ($this->tanya === null) {
+            echo 'Kata sandi tidak diubah. Gunakan perintah ganti-sandi untuk menggantinya.' . PHP_EOL;
+
+            return 0;
+        }
+
+        $jawaban = strtolower(trim(($this->tanya)('Ganti kata sandinya sekarang? [y/N]: ')));
+        if (! in_array($jawaban, ['y', 'ya'], true)) {
+            echo 'Kata sandi tidak diubah.' . PHP_EOL;
+
+            return 0;
+        }
+
+        $sandi = $this->mintaSandiBaru($this->user->adalahAdmin($user->id));
+        if ($sandi === null) {
+            return 1;
+        }
+
+        $this->user->gantiSandi($user->id, $sandi);
+        printf('Kata sandi %s sudah diganti.%s', $user->email, PHP_EOL);
 
         return 0;
     }
@@ -132,8 +178,8 @@ final class Perintah
         echo <<<BANTUAN
             Pemakaian: dapur-dashboard <perintah>
 
-              pasang                          Membuat tabel dashboard (aman diulang)
-              buat-admin <email> [--nama=..]  Membuat admin; kata sandi diketik tanpa terlihat
+              pasang                          Membuat tabel yang belum ada (aman diulang)
+              buat-admin <email> [--nama=..]  Membuat admin, atau menambah akses user yang sudah ada
               ganti-sandi <email>             Mengganti kata sandi user
 
             Dengan paket adems/dapur-multiwebsite, tambahkan --website=<domain> untuk dashboard website.
