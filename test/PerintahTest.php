@@ -24,12 +24,25 @@ final class PerintahTest extends TestCase
         $this->daftar = new DaftarUser($this->db);
     }
 
-    /** @param list<string> $jawaban */
-    private function perintah(array $jawaban = [], string $lingkup = 'dashboard'): Perintah
+    private string $keluaran = '';
+
+    /**
+     * @param list<string>      $jawaban kata sandi yang diketik berurutan
+     * @param list<string>|null $tanya   jawaban pertanyaan ya/tidak; null = bukan terminal
+     */
+    private function perintah(array $jawaban = [], string $lingkup = 'dashboard', ?array $tanya = null): Perintah
     {
-        return new Perintah($this->db, $this->daftar, static function () use (&$jawaban): string {
-            return (string) array_shift($jawaban);
-        }, $lingkup);
+        return new Perintah(
+            $this->db,
+            $this->daftar,
+            static function () use (&$jawaban): string {
+                return (string) array_shift($jawaban);
+            },
+            $lingkup,
+            $tanya === null ? null : static function () use (&$tanya): string {
+                return (string) array_shift($tanya);
+            },
+        );
     }
 
     /** @param list<string> $argumen */
@@ -39,7 +52,7 @@ final class PerintahTest extends TestCase
         try {
             return $perintah->jalankan($argumen);
         } finally {
-            ob_end_clean();
+            $this->keluaran = (string) ob_get_clean();
         }
     }
 
@@ -47,6 +60,19 @@ final class PerintahTest extends TestCase
     {
         self::assertSame(0, $this->jalankan($this->perintah(), ['pasang']));
         self::assertSame(0, $this->jalankan($this->perintah(), ['pasang']));
+    }
+
+    public function testPasangMelaporkanTabelYangDibuatDanYangSudahAda(): void
+    {
+        $this->db->query('DROP TABLE adems_percobaan_masuk', Adapter::QUERY_MODE_EXECUTE);
+
+        $this->jalankan($this->perintah(), ['pasang']);
+        self::assertMatchesRegularExpression('/adems_user\s+sudah ada/', $this->keluaran);
+        self::assertMatchesRegularExpression('/adems_percobaan_masuk\s+dibuat/', $this->keluaran);
+
+        $this->jalankan($this->perintah(), ['pasang']);
+        self::assertSame(3, preg_match_all('/^Tabel \S+\s+sudah ada$/m', $this->keluaran));
+        self::assertSame(0, preg_match_all('/^Tabel \S+\s+dibuat$/m', $this->keluaran));
     }
 
     public function testBuatAdmin(): void
@@ -131,6 +157,52 @@ final class PerintahTest extends TestCase
 
         self::assertSame(0, $kode);
         self::assertTrue($this->daftar->punyaAkses($id, 'blog.contoh.com'));
+        self::assertTrue(password_verify(self::SANDI, (string) $this->daftar->cariId($id)?->kataSandi));
+    }
+
+    public function testUserAdaTanpaTerminalTidakDitanyaDanDiberiPetunjuk(): void
+    {
+        $id = $this->daftar->buat('admin@contoh.com', 'Admin', self::SANDI);
+        $this->daftar->tambahAkses($id, 'dashboard');
+
+        self::assertSame(0, $this->jalankan($this->perintah(), ['buat-admin', 'admin@contoh.com']));
+        self::assertStringContainsString("sudah memiliki akses ke 'dashboard'", $this->keluaran);
+        self::assertStringContainsString('ganti-sandi', $this->keluaran);
+    }
+
+    public function testUserAdaMenjawabYaKataSandiDiganti(): void
+    {
+        $id   = $this->daftar->buat('admin@contoh.com', 'Admin', self::SANDI);
+        $baru = 'kata-sandi-baru-yang-panjang';
+        $this->daftar->tambahAkses($id, 'dashboard');
+
+        $kode = $this->jalankan($this->perintah([$baru, $baru], 'dashboard', ['y']), ['buat-admin', 'admin@contoh.com']);
+
+        self::assertSame(0, $kode);
+        self::assertTrue(password_verify($baru, (string) $this->daftar->cariId($id)?->kataSandi));
+        self::assertStringContainsString('sudah diganti', $this->keluaran);
+    }
+
+    public function testUserAdaJawabanBawaanKataSandiTetap(): void
+    {
+        $id = $this->daftar->buat('admin@contoh.com', 'Admin', self::SANDI);
+
+        $kode = $this->jalankan($this->perintah([], 'blog.contoh.com', ['']), ['buat-admin', 'admin@contoh.com']);
+
+        self::assertSame(0, $kode);
+        self::assertTrue(password_verify(self::SANDI, (string) $this->daftar->cariId($id)?->kataSandi));
+        self::assertStringContainsString("akses admin ke 'blog.contoh.com' ditambahkan", $this->keluaran);
+        self::assertStringContainsString('Kata sandi tidak diubah.', $this->keluaran);
+    }
+
+    public function testUserAdaGantiSandiTetapMemakaiAturanAdmin(): void
+    {
+        $id = $this->daftar->buat('admin@contoh.com', 'Admin', self::SANDI);
+        $this->daftar->tambahAkses($id, 'dashboard');
+
+        $kode = $this->jalankan($this->perintah(['sebelas-111'], 'dashboard', ['ya']), ['buat-admin', 'admin@contoh.com']);
+
+        self::assertSame(1, $kode);
         self::assertTrue(password_verify(self::SANDI, (string) $this->daftar->cariId($id)?->kataSandi));
     }
 
