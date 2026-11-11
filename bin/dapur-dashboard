@@ -36,6 +36,15 @@ $bacaSandi = static function (string $pesan): string {
     return rtrim((string) $baris, "\r\n");
 };
 
+// Pertanyaan ya/tidak hanya diajukan bila dijalankan di terminal; dari skrip tidak ada yang ditanyakan.
+$tanya = stream_isatty(STDIN)
+    ? static function (string $pesan): string {
+        echo $pesan;
+
+        return rtrim((string) fgets(STDIN), "\r\n");
+    }
+    : null;
+
 $argumen = array_values(array_slice($argv, 1));
 
 try {
@@ -44,7 +53,7 @@ try {
     $container = require 'config/container.php';
     $db        = $container->get(Adapter::class);
 
-    exit((new Perintah($db, new DaftarUser($db), $bacaSandi(...), Konteks::lingkup()))->jalankan($argumen));
+    exit((new Perintah($db, new DaftarUser($db), $bacaSandi(...), Konteks::lingkup(), $tanya))->jalankan($argumen));
 } catch (Throwable $e) {
     while ($e->getPrevious() !== null) {
         $e = $e->getPrevious();
