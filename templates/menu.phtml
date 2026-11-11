@@ -1,0 +1,33 @@
+<?php
+/**
+ * Menu dashboard. Tidak menghasilkan keluaran di halaman: isinya dikirim ke navbar layout
+ * lewat placeholder 'menu' (tautan) dan 'menu-kanan' (nama user dan tombol keluar).
+ *
+ * @var array $menu
+ * @var string|null $ruteAktif
+ * @var AdeMS\Dapur\Dashboard\User|null $user
+ * @var string $tokenCsrf
+ * @var string $fieldCsrf
+ */
+?>
+<?php $this->placeholder('menu')->captureStart() ?>
+<?php foreach ($this->menu as $item) : ?>
+<?php $aktif = $item['rute'] === $this->ruteAktif ?>
+                            <li class="nav-item">
+                                <a class="nav-link<?= $aktif ? ' active' : '' ?>" href="<?= $this->escapeHtmlAttr($this->url($item['rute'])) ?>"<?= $aktif ? ' aria-current="page"' : '' ?>>
+                                    <i class="bi bi-<?= $this->escapeHtmlAttr($item['ikon']) ?> me-1"></i><?= $this->escapeHtml($item['label']) ?>
+                                </a>
+                            </li>
+<?php endforeach ?>
+<?php $this->placeholder('menu')->captureEnd() ?>
+<?php $this->placeholder('menu-kanan')->captureStart() ?>
+                            <li class="nav-item">
+                                <span class="navbar-text me-md-2"><i class="bi bi-person-circle me-1"></i><?= $this->escapeHtml($this->user->nama) ?></span>
+                            </li>
+                            <li class="nav-item">
+                                <form method="post" action="<?= $this->escapeHtmlAttr($this->url('dashboard.keluar')) ?>">
+                                    <input type="hidden" name="<?= $this->escapeHtmlAttr($this->fieldCsrf) ?>" value="<?= $this->escapeHtmlAttr($this->tokenCsrf) ?>">
+                                    <button type="submit" class="btn btn-link nav-link"><i class="bi bi-box-arrow-right me-1"></i>Keluar</button>
+                                </form>
+                            </li>
+<?php $this->placeholder('menu-kanan')->captureEnd() ?>
