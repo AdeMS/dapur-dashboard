@@ -63,12 +63,17 @@ final class MasukHandler implements RequestHandlerInterface
             return $this->gagal($request, $email, 'Email atau kata sandi salah.', 401);
         }
 
+        $tujuan = $sesi->ambil(WajibMasukMiddleware::SESI_TUJUAN);
+        $sesi->hapus(WajibMasukMiddleware::SESI_TUJUAN);
+
         $sesi->gantiId();
         $csrf->baru();
         $sesi->simpan(WajibMasukMiddleware::SESI_USER, $hasil->user->id);
         $sesi->simpan(WajibMasukMiddleware::SESI_TERAKHIR, time());
 
-        return new RedirectResponse($this->pengaturan->rute());
+        return new RedirectResponse(
+            WajibMasukMiddleware::tujuanSah($tujuan, $this->pengaturan) ? $tujuan : $this->pengaturan->rute(),
+        );
     }
 
     private function gagal(ServerRequestInterface $request, string $email, string $pesan, int $status): ResponseInterface
