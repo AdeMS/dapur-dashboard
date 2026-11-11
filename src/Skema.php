@@ -17,11 +17,19 @@ final class Skema
     /** @return list<string> */
     public static function perintah(string $platform): array
     {
-        return match ($platform) {
+        return array_values(self::tabel($platform));
+    }
+
+    /** @return array<string, string> nama tabel => perintah CREATE TABLE */
+    public static function tabel(string $platform): array
+    {
+        $perintah = match ($platform) {
             'MySQL'  => self::mysql(),
             'SQLite' => self::sqlite(),
             default  => throw new RuntimeException("Dashboard belum mendukung database {$platform}."),
         };
+
+        return array_combine(['adems_user', 'adems_user_akses', 'adems_percobaan_masuk'], $perintah);
     }
 
     /** @return list<string> */
