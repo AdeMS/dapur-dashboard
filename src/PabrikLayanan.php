@@ -24,6 +24,8 @@ final class PabrikLayanan
             ConfigProvider::WAJIB_MASUK => PabrikUser::wajibMasuk($c, self::pintu($c)),
             ConfigProvider::MASUK => PabrikUser::masuk($c, self::pintu($c)),
             ConfigProvider::KELUAR => PabrikUser::keluar($c, self::pintu($c)),
+            // Profil dari paket user, dengan menu dashboard (Tampilan) dan template dashboard::profil.
+            ConfigProvider::PROFIL => PabrikUser::profil($c, self::pintu($c), $c->get(Tampilan::class), 'dashboard::profil'),
             RingkasanHandler::class => new RingkasanHandler($c->get(Tampilan::class)),
             WebsiteHandler::class => new WebsiteHandler($c->get(Tampilan::class), Konteks::folderInti()),
             default => throw new RuntimeException("Layanan dashboard tidak dikenal: {$nama}"),
