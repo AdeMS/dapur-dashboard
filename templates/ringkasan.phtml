@@ -7,7 +7,7 @@
 $this->headTitle('Dashboard');
 ?>
 <div class="container py-4">
-    <?= $this->partial('dashboard::menu', ['menu' => $this->menu, 'ruteAktif' => $this->ruteAktif, 'user' => $this->user, 'alamatKeluar' => $this->alamatKeluar, 'tokenCsrf' => $this->tokenCsrf, 'fieldCsrf' => $this->fieldCsrf]) ?>
+    <?= $this->partial('dashboard::menu', ['menu' => $this->menu, 'ruteAktif' => $this->ruteAktif, 'user' => $this->user, 'alamatKeluar' => $this->alamatKeluar, 'alamatProfil' => $this->alamatProfil, 'tokenCsrf' => $this->tokenCsrf, 'fieldCsrf' => $this->fieldCsrf]) ?>
     <h1 class="h3">Dashboard <?= $this->escapeHtml($this->infoWebsite()->judul()) ?></h1>
     <p class="text-body-secondary">Halo, <?= $this->escapeHtml($this->user->nama) ?>.</p>
 </div>
