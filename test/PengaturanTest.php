@@ -7,14 +7,13 @@ namespace AdeMS\Dapur\Dashboard\Test;
 use AdeMS\Dapur\Dashboard\ConfigProvider;
 use AdeMS\Dapur\Dashboard\DashboardUtamaConfigProvider;
 use AdeMS\Dapur\Dashboard\Pengaturan;
-use AdeMS\Dapur\Dashboard\TokenCsrf;
+use AdeMS\Dapur\User\DaftarUser;
+use AdeMS\Dapur\User\Middleware\MulaiSesiMiddleware;
 use AdeMS\Dapur\MultiWebsite\Website;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-
-require_once __DIR__ . '/BantuanUji.php';
 
 final class PengaturanTest extends TestCase
 {
@@ -68,6 +67,40 @@ final class PengaturanTest extends TestCase
         self::assertSame(['dashboard.ringkasan'], array_column($config['dashboard']['menu'], 'rute'));
     }
 
+    public function testPintuMengikutiPengaturanDashboard(): void
+    {
+        $pintu = (new Pengaturan(['alamat_dasar' => '/admin', 'batas_diam' => 600, 'layout' => 'layout::lain']))->pintu('blog.contoh.com');
+
+        self::assertSame('blog.contoh.com', $pintu->lingkup);
+        self::assertSame('/admin/masuk', $pintu->alamatMasuk());
+        self::assertSame('/admin/keluar', $pintu->alamatKeluar());
+        self::assertSame(600, $pintu->batasDiam);
+        self::assertSame('layout::lain', $pintu->layout);
+        self::assertTrue($pintu->tujuanSah('/admin/website'));
+        self::assertFalse($pintu->tujuanSah('/halaman-publik'));
+    }
+
+    public function testPintuDashboardUtamaDiAkar(): void
+    {
+        $pintu = (new Pengaturan(['alamat_dasar' => '/']))->pintu('dashboard');
+
+        self::assertSame('/masuk', $pintu->alamatMasuk());
+        self::assertTrue($pintu->tujuanSah('/website?urut=nama'));
+    }
+
+    public function testLayananUserIkutDimuat(): void
+    {
+        $config = (new ConfigProvider())();
+
+        self::assertArrayHasKey(DaftarUser::class, $config['dependencies']['factories']);
+        self::assertArrayHasKey(MulaiSesiMiddleware::class, $config['dependencies']['factories']);
+        self::assertArrayHasKey(ConfigProvider::MASUK, $config['dependencies']['factories']);
+        self::assertArrayHasKey('user', $config['templates']['paths']);
+        self::assertArrayHasKey('dashboard', $config['templates']['paths']);
+        // Tanpa nilai bawaan, agar pengaturan 'user' inti tidak tertimpa saat modul dipasang di website.
+        self::assertArrayNotHasKey('user', $config);
+    }
+
     #[RunInSeparateProcess]
     public function testDashboardUtamaDiInti(): void
     {
@@ -84,27 +117,5 @@ final class PengaturanTest extends TestCase
         Website::aktifkan(Website::dariFolderDomain('blog.contoh.com', '/tmp/blog'));
 
         self::assertSame([], (new DashboardUtamaConfigProvider())());
-    }
-
-    public function testTokenCsrf(): void
-    {
-        $sesi  = new SesiLarik();
-        $csrf  = new TokenCsrf($sesi);
-        $token = $csrf->token();
-
-        self::assertSame($token, $csrf->token());
-        self::assertTrue($csrf->sah($token));
-        self::assertFalse($csrf->sah('salah'));
-        self::assertFalse($csrf->sah(null));
-        self::assertFalse($csrf->sah(['larik']));
-
-        $csrf->baru();
-        self::assertFalse($csrf->sah($token));
-        self::assertNotSame($token, $csrf->token());
-    }
-
-    public function testTokenCsrfTanpaTokenTidakSah(): void
-    {
-        self::assertFalse((new TokenCsrf(new SesiLarik()))->sah(''));
     }
 }
