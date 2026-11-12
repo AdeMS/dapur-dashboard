@@ -4,12 +4,9 @@ declare(strict_types=1);
 
 namespace AdeMS\Dapur\Dashboard;
 
-use AdeMS\Dapur\Dashboard\Handler\KeluarHandler;
-use AdeMS\Dapur\Dashboard\Handler\MasukHandler;
 use AdeMS\Dapur\Dashboard\Handler\RingkasanHandler;
 use AdeMS\Dapur\Dashboard\Handler\WebsiteHandler;
-use AdeMS\Dapur\Dashboard\Middleware\MulaiSesiMiddleware;
-use AdeMS\Dapur\Dashboard\Middleware\WajibMasukMiddleware;
+use AdeMS\Dapur\User\Middleware\MulaiSesiMiddleware;
 use Mezzio\Application;
 use Psr\Container\ContainerInterface;
 
@@ -23,10 +20,10 @@ final class RuteDelegator
 
         $atur   = $container->get(Pengaturan::class);
         $publik = [MulaiSesiMiddleware::class];
-        $masuk  = [MulaiSesiMiddleware::class, WajibMasukMiddleware::class];
+        $masuk  = [MulaiSesiMiddleware::class, ConfigProvider::WAJIB_MASUK];
 
-        $app->route($atur->rute('/masuk'), [...$publik, MasukHandler::class], ['GET', 'POST'], 'dashboard.masuk');
-        $app->post($atur->rute('/keluar'), [...$masuk, KeluarHandler::class], 'dashboard.keluar');
+        $app->route($atur->rute('/masuk'), [...$publik, ConfigProvider::MASUK], ['GET', 'POST'], 'dashboard.masuk');
+        $app->post($atur->rute('/keluar'), [...$masuk, ConfigProvider::KELUAR], 'dashboard.keluar');
         $app->get($atur->rute(), [...$masuk, RingkasanHandler::class], 'dashboard.ringkasan');
 
         if ($atur->utama) {
