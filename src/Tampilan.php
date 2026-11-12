@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace AdeMS\Dapur\Dashboard;
 
+use AdeMS\Dapur\User\Sesi;
+use AdeMS\Dapur\User\TokenCsrf;
+use AdeMS\Dapur\User\User;
 use Laminas\Diactoros\Response\HtmlResponse;
 use Mezzio\Router\RouteResult;
 use Mezzio\Template\TemplateRendererInterface;
@@ -30,12 +33,13 @@ final class Tampilan
         assert($sesi instanceof Sesi);
 
         return new HtmlResponse($this->renderer->render($template, $data + [
-            'layout'     => $this->pengaturan->layout,
-            'menu'       => $this->pengaturan->menu,
-            'ruteAktif'  => $request->getAttribute(RouteResult::class)?->getMatchedRouteName() ?: null,
-            'user'       => $request->getAttribute(User::class),
-            'tokenCsrf'  => (new TokenCsrf($sesi))->token(),
-            'fieldCsrf'  => TokenCsrf::FIELD,
+            'layout'       => $this->pengaturan->layout,
+            'menu'         => $this->pengaturan->menu,
+            'ruteAktif'    => $request->getAttribute(RouteResult::class)?->getMatchedRouteName() ?: null,
+            'user'         => $request->getAttribute(User::class),
+            'alamatKeluar' => $this->pengaturan->rute('/keluar'),
+            'tokenCsrf'    => (new TokenCsrf($sesi))->token(),
+            'fieldCsrf'    => TokenCsrf::FIELD,
         ]), $status);
     }
 }
