@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AdeMS\Dapur\Dashboard;
 
+use AdeMS\Dapur\User\PenyajiHalaman;
 use AdeMS\Dapur\User\Sesi;
 use AdeMS\Dapur\User\TokenCsrf;
 use AdeMS\Dapur\User\User;
@@ -13,8 +14,11 @@ use Mezzio\Template\TemplateRendererInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 
-/** Merender halaman dashboard dengan data yang selalu dibutuhkan template. */
-final class Tampilan
+/**
+ * Merender halaman dashboard dengan data yang selalu dibutuhkan template. Dipakai juga oleh halaman Profil
+ * dari paket user, agar halaman itu tampil dengan menu dashboard.
+ */
+final class Tampilan implements PenyajiHalaman
 {
     public function __construct(
         private readonly TemplateRendererInterface $renderer,
@@ -38,6 +42,7 @@ final class Tampilan
             'ruteAktif'    => $request->getAttribute(RouteResult::class)?->getMatchedRouteName() ?: null,
             'user'         => $request->getAttribute(User::class),
             'alamatKeluar' => $this->pengaturan->rute('/keluar'),
+            'alamatProfil' => $this->pengaturan->rute('/profil'),
             'tokenCsrf'    => (new TokenCsrf($sesi))->token(),
             'fieldCsrf'    => TokenCsrf::FIELD,
         ]), $status);
