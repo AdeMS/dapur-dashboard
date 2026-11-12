@@ -1,0 +1,22 @@
+<?php
+/**
+ * Halaman profil user di dashboard: menu dashboard, lalu isi profil dari paket adems/dapur-user.
+ *
+ * @var AdeMS\Dapur\User\User $user
+ */
+$this->headTitle('Profil');
+?>
+<?= $this->partial('dashboard::menu', ['menu' => $this->menu, 'ruteAktif' => $this->ruteAktif, 'user' => $this->user, 'alamatKeluar' => $this->alamatKeluar, 'alamatProfil' => $this->alamatProfil, 'tokenCsrf' => $this->tokenCsrf, 'fieldCsrf' => $this->fieldCsrf]) ?>
+<?= $this->partial('user::profil-isi', [
+    'user'         => $this->user,
+    'pesan'        => $this->pesan,
+    'galat'        => $this->galat,
+    'galatBagian'  => $this->galatBagian,
+    'nama'         => $this->nama,
+    'alamatProfil' => $this->alamatProfil,
+    'minimalSandi' => $this->minimalSandi,
+    'zonaWaktu'    => $this->zonaWaktu,
+    'riwayat'      => $this->riwayat,
+    'tokenCsrf'    => $this->tokenCsrf,
+    'fieldCsrf'    => $this->fieldCsrf,
+]) ?>
