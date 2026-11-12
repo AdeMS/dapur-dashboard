@@ -85,6 +85,7 @@ final class PengaturanTest extends TestCase
         $pintu = (new Pengaturan(['alamat_dasar' => '/']))->pintu('dashboard');
 
         self::assertSame('/masuk', $pintu->alamatMasuk());
+        self::assertSame('/profil', $pintu->alamatProfil());
         self::assertTrue($pintu->tujuanSah('/website?urut=nama'));
     }
 
@@ -95,6 +96,7 @@ final class PengaturanTest extends TestCase
         self::assertArrayHasKey(DaftarUser::class, $config['dependencies']['factories']);
         self::assertArrayHasKey(MulaiSesiMiddleware::class, $config['dependencies']['factories']);
         self::assertArrayHasKey(ConfigProvider::MASUK, $config['dependencies']['factories']);
+        self::assertArrayHasKey(ConfigProvider::PROFIL, $config['dependencies']['factories']);
         self::assertArrayHasKey('user', $config['templates']['paths']);
         self::assertArrayHasKey('dashboard', $config['templates']['paths']);
         // Tanpa nilai bawaan, agar pengaturan 'user' inti tidak tertimpa saat modul dipasang di website.
