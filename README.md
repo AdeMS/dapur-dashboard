@@ -7,7 +7,7 @@ Dapur, atau sebagai dashboard milik satu website.
 ## Kebutuhan
 
 - Dapur AdeMS 2.6 atau lebih baru (layout dengan tempat menu di navbar)
-- [adems/dapur-user](https://github.com/AdeMS/dapur-user) 1.0 (ikut terpasang otomatis)
+- [adems/dapur-user](https://github.com/AdeMS/dapur-user) 1.1 (ikut terpasang otomatis)
 - MariaDB atau MySQL yang sudah diatur di `config/autoload/database.local.php` (SQLite juga bisa dipakai)
 - [adems/dapur-multiwebsite](https://github.com/AdeMS/dapur-multiwebsite) 1.1 atau lebih baru, untuk halaman
   daftar website dan dashboard per website
@@ -19,7 +19,7 @@ Tulis paketnya di `composer.local.json`, lalu jalankan `composer update`:
 ```json
 {
     "require": {
-        "adems/dapur-dashboard": "^2.0"
+        "adems/dapur-dashboard": "^2.1"
     }
 }
 ```
@@ -72,6 +72,13 @@ vendor/bin/dapur-user buat-admin admin@contoh.com --website=contoh.com
 Akses diberikan per lingkup: admin dashboard utama tidak otomatis bisa masuk ke dashboard website, dan
 sebaliknya. Website yang tidak mengaktifkan modul ini tidak memiliki alamat dashboard.
 
+### Profil
+
+Setiap dashboard punya halaman profil dari paket user, di `/profil` (dashboard utama) atau `/dashboard/profil`
+(dashboard website), dengan tautan di submenu avatar. Di sana user mengubah nama, mengganti kata sandi, dan
+melihat riwayat loginnya. Halaman ini tampil dengan menu dashboard; isinya dijelaskan di
+[README dapur-user](https://github.com/AdeMS/dapur-user#profil).
+
 ## Pengaturan
 
 Tulis di `config/autoload/*.php`, milik inti atau milik website:
@@ -97,12 +104,18 @@ return [
 Website bisa memakai database sendiri lewat `config/autoload/*.local.php` miliknya. Untuk dashboard yang sama
 sekali berbeda, buat modul sendiri di folder `module/` website tanpa paket ini.
 
+## Memperbarui dari 2.0
+
+Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.1"`, jalankan `composer update`, lalu hapus cache
+konfigurasi. Tidak ada perubahan tabel. Bila template `ringkasan` atau `website` ditimpa sendiri, tambahkan
+`'alamatProfil' => $this->alamatProfil` pada pemanggilan `dashboard::menu` agar tautan Profil muncul.
+
 ## Memperbarui dari 1.x
 
 Login, user, dan perintahnya pindah ke paket [adems/dapur-user](https://github.com/AdeMS/dapur-user), yang
 ikut terpasang otomatis.
 
-1. Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.0"`, lalu jalankan `composer update`.
+1. Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.1"`, lalu jalankan `composer update`.
 2. Versi 1.x selalu memakai tabel `adems_user`, `adems_user_akses`, dan `adems_percobaan_masuk`. Untuk tetap
    memakai tabel itu, atur awalan `adems_` di `config/autoload/*.php` milik inti:
 
