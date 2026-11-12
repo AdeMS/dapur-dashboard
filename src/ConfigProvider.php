@@ -22,6 +22,7 @@ final class ConfigProvider
     public const WAJIB_MASUK = 'dashboard.wajib_masuk';
     public const MASUK       = 'dashboard.handler.masuk';
     public const KELUAR      = 'dashboard.handler.keluar';
+    public const PROFIL      = 'dashboard.handler.profil';
 
     /** @return array<string, mixed> */
     public function __invoke(): array
@@ -50,6 +51,7 @@ final class ConfigProvider
                     self::WAJIB_MASUK,
                     self::MASUK,
                     self::KELUAR,
+                    self::PROFIL,
                     Handler\RingkasanHandler::class,
                     Handler\WebsiteHandler::class,
                 ], PabrikLayanan::class),
