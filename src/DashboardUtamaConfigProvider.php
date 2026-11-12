@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace AdeMS\Dapur\Dashboard;
 
+use AdeMS\Dapur\User\Konteks;
+
 /**
  * Lapis dashboard utama: lapis dasar di alamat '/' ditambah halaman yang menyangkut semua website.
  *
