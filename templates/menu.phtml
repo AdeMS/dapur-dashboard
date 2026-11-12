@@ -1,35 +1,16 @@
 <?php
 /**
- * Menu dashboard. Tidak menghasilkan keluaran di halaman: isinya dikirim ke navbar layout
- * lewat placeholder 'menu' (tautan) dan 'menu-kanan' (avatar inisial user dengan submenu nama, email, dan tombol keluar).
+ * Menu dashboard. Tidak menghasilkan keluaran di halaman: tautan dikirim ke placeholder 'menu' pada navbar
+ * layout, dan menu user (avatar dengan submenu) dari paket adems/dapur-user ke placeholder 'menu-kanan'.
  *
  * @var array $menu
  * @var string|null $ruteAktif
- * @var AdeMS\Dapur\Dashboard\User|null $user
+ * @var AdeMS\Dapur\User\User|null $user
+ * @var string $alamatKeluar
  * @var string $tokenCsrf
  * @var string $fieldCsrf
  */
 ?>
-<style>
-    /* Avatar inisial user di navbar, berbentuk bola hijau; nanti diganti foto profil bila ada */
-    .dashboard-avatar {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 2.25rem;
-        height: 2.25rem;
-        border-radius: 50%;
-        /* Cahaya dari kiri atas: terang di pantulan, gelap di sisi bawah kanan */
-        background: radial-gradient(circle at 32% 28%, #6fd39c 0%, #28a466 22%, #198754 50%, #0f5c39 80%, #093a24 100%);
-        color: #fff;
-        font-size: .9rem;
-        font-weight: 600;
-        letter-spacing: .02em;
-        line-height: 1;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, .45);
-        box-shadow: inset -2px -3px 5px rgba(0, 0, 0, .35), inset 2px 2px 4px rgba(255, 255, 255, .15), 0 2px 4px rgba(0, 0, 0, .4);
-    }
-</style>
 <?php $this->placeholder('menu')->captureStart() ?>
 <?php foreach ($this->menu as $item) : ?>
 <?php $aktif = $item['rute'] === $this->ruteAktif ?>
@@ -40,23 +21,11 @@
                             </li>
 <?php endforeach ?>
 <?php $this->placeholder('menu')->captureEnd() ?>
-<?php $this->placeholder('menu-kanan')->captureStart() ?>
-                            <li class="nav-item dropdown">
-                                <button class="btn btn-link nav-link dropdown-toggle d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Menu user <?= $this->escapeHtmlAttr($this->user->nama) ?>">
-                                    <span class="dashboard-avatar" aria-hidden="true"><?= $this->escapeHtml($this->user->inisial()) ?></span>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end">
-                                    <li class="dropdown-item-text">
-                                        <div class="fw-semibold"><?= $this->escapeHtml($this->user->nama) ?></div>
-                                        <div class="small text-body-secondary"><?= $this->escapeHtml($this->user->email) ?></div>
-                                    </li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li>
-                                        <form method="post" action="<?= $this->escapeHtmlAttr($this->url('dashboard.keluar')) ?>">
-                                            <input type="hidden" name="<?= $this->escapeHtmlAttr($this->fieldCsrf) ?>" value="<?= $this->escapeHtmlAttr($this->tokenCsrf) ?>">
-                                            <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right me-2"></i>Keluar</button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </li>
-<?php $this->placeholder('menu-kanan')->captureEnd() ?>
+<?php if ($this->user) : ?>
+<?= $this->partial('user::menu-user', [
+    'user'         => $this->user,
+    'alamatKeluar' => $this->alamatKeluar,
+    'tokenCsrf'    => $this->tokenCsrf,
+    'fieldCsrf'    => $this->fieldCsrf,
+]) ?>
+<?php endif ?>
