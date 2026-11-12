@@ -7,6 +7,7 @@
  * @var string|null $ruteAktif
  * @var AdeMS\Dapur\User\User|null $user
  * @var string $alamatKeluar
+ * @var string|null $alamatProfil
  * @var string $tokenCsrf
  * @var string $fieldCsrf
  */
@@ -25,6 +26,7 @@
 <?= $this->partial('user::menu-user', [
     'user'         => $this->user,
     'alamatKeluar' => $this->alamatKeluar,
+    'alamatProfil' => $this->alamatProfil ?? null,
     'tokenCsrf'    => $this->tokenCsrf,
     'fieldCsrf'    => $this->fieldCsrf,
 ]) ?>
