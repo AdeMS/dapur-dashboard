@@ -99,9 +99,21 @@ final class TampilanTest extends TestCase
         self::assertSame('/dashboard/profil', $data['alamatProfil']);
     }
 
+    public function testAdminSuperDanAdminWebMelihatMenuUser(): void
+    {
+        foreach (['admin_super', 'admin_web'] as $peran) {
+            self::assertSame(['dashboard.ringkasan', 'dashboard.user'], array_column($this->render($peran)['menu'], 'rute'), $peran);
+        }
+    }
+
     public function testAnggotaTidakMelihatMenuUser(): void
     {
         self::assertSame(['dashboard.ringkasan'], array_column($this->render('anggota')['menu'], 'rute'));
+    }
+
+    public function testTanpaPesanErrorTidakAdaNotifikasi(): void
+    {
+        self::assertNull($this->render('admin_super')['notifikasi']);
     }
 
     public function testHalamanDibungkusKerangkaDenganLayoutWebsite(): void
