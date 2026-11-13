@@ -1,0 +1,29 @@
+<?php
+/**
+ * Halaman kelola user di dashboard: isi dari paket adems/dapur-user. Menu samping dan menu user
+ * ditambahkan oleh kerangka dashboard (Tampilan).
+ *
+ * @var AdeMS\Dapur\User\User $user
+ */
+$this->headTitle('User');
+?>
+<?= $this->partial('user::kelola-user-isi', [
+    'user'          => $this->user,
+    'ditolak'       => $this->ditolak,
+    'belumSiap'     => $this->belumSiap,
+    'pesan'         => $this->pesan,
+    'galat'         => $this->galat,
+    'sandiBaru'     => $this->sandiBaru,
+    'daftarUser'    => $this->daftarUser,
+    'aktivitas'     => $this->aktivitas,
+    'peranTersedia' => $this->peranTersedia,
+    'kelolaAkun'    => $this->kelolaAkun,
+    'lingkup'       => $this->lingkup,
+    'alamatKelola'  => $this->alamatKelola,
+    'zonaWaktu'     => $this->zonaWaktu,
+    'formEmail'     => $this->formEmail,
+    'formNama'      => $this->formNama,
+    'formPeran'     => $this->formPeran,
+    'tokenCsrf'     => $this->tokenCsrf,
+    'fieldCsrf'     => $this->fieldCsrf,
+]) ?>
