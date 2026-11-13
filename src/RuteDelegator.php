@@ -26,6 +26,7 @@ final class RuteDelegator
         $app->post($atur->rute('/keluar'), [...$masuk, ConfigProvider::KELUAR], 'dashboard.keluar');
         $app->get($atur->rute(), [...$masuk, RingkasanHandler::class], 'dashboard.ringkasan');
         $app->route($atur->rute('/profil'), [...$masuk, ConfigProvider::PROFIL], ['GET', 'POST'], 'dashboard.profil');
+        $app->route($atur->rute('/user'), [...$masuk, ConfigProvider::KELOLA_USER], ['GET', 'POST'], 'dashboard.user');
 
         if ($atur->utama) {
             $app->get($atur->rute('/website'), [...$masuk, WebsiteHandler::class], 'dashboard.website');
