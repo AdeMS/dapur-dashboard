@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AdeMS\Dapur\Dashboard;
 
+use AdeMS\Dapur\Dashboard\Handler\PesanErrorHandler;
 use AdeMS\Dapur\Dashboard\Handler\RingkasanHandler;
 use AdeMS\Dapur\Dashboard\Handler\WebsiteHandler;
 use AdeMS\Dapur\User\Middleware\MulaiSesiMiddleware;
@@ -27,6 +28,7 @@ final class RuteDelegator
         $app->get($atur->rute(), [...$masuk, RingkasanHandler::class], 'dashboard.ringkasan');
         $app->route($atur->rute('/profil'), [...$masuk, ConfigProvider::PROFIL], ['GET', 'POST'], 'dashboard.profil');
         $app->route($atur->rute('/user'), [...$masuk, ConfigProvider::KELOLA_USER], ['GET', 'POST'], 'dashboard.user');
+        $app->route($atur->rute('/error'), [...$masuk, PesanErrorHandler::class], ['GET', 'POST'], 'dashboard.error');
 
         if ($atur->utama) {
             $app->get($atur->rute('/website'), [...$masuk, WebsiteHandler::class], 'dashboard.website');
