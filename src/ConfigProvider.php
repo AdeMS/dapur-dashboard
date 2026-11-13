@@ -23,6 +23,7 @@ final class ConfigProvider
     public const MASUK       = 'dashboard.handler.masuk';
     public const KELUAR      = 'dashboard.handler.keluar';
     public const PROFIL      = 'dashboard.handler.profil';
+    public const KELOLA_USER = 'dashboard.handler.user';
 
     /** @return array<string, mixed> */
     public function __invoke(): array
@@ -37,6 +38,8 @@ final class ConfigProvider
                 'batas_diam'   => 3600,
                 'menu'         => [
                     ['label' => 'Ringkasan', 'rute' => 'dashboard.ringkasan', 'ikon' => 'speedometer2'],
+                    // 'peran': menu hanya tampil untuk user dengan peran ini
+                    ['label' => 'User', 'rute' => 'dashboard.user', 'ikon' => 'people', 'peran' => 'admin'],
                 ],
             ],
             'templates'    => [
@@ -52,6 +55,7 @@ final class ConfigProvider
                     self::MASUK,
                     self::KELUAR,
                     self::PROFIL,
+                    self::KELOLA_USER,
                     Handler\RingkasanHandler::class,
                     Handler\WebsiteHandler::class,
                 ], PabrikLayanan::class),
