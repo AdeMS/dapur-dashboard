@@ -4,14 +4,15 @@
  * ini sebagai $isi.
  *
  * Kerangka tidak membuat tata letak sendiri: item menu dashboard dikirim ke placeholder 'menu-samping', tombol
- * layar penuh (hanya layar besar) ke 'menu-sebelum-tema', dan menu user (avatar) ke 'menu-kanan'. Layout Dapur
- * (2.7 atau lebih baru) menampilkan menu samping di kiri, dan di layar kecil membukanya lewat tombol menu
- * (hamburger) di navbar.
+ * layar penuh (hanya layar besar) dan lonceng Pesan Error (admin) ke 'menu-alat', dan menu user (avatar) ke
+ * 'menu-kanan'. Layout Dapur (2.9 atau lebih baru) menampilkan menu samping di kiri, dan di layar
+ * kecil membukanya lewat tombol menu (hamburger) di navbar.
  *
  * @var string $isi                   HTML halaman yang sudah dirender
  * @var list<array{label: string, rute: string, ikon: string, peran: ?string}> $menu
  * @var string|null $ruteAktif
  * @var AdeMS\Dapur\User\User|null $user
+ * @var array{jumlah: int, terbaru: list<array<string, mixed>>, alamat: string}|null $notifikasi
  * @var string $alamatKeluar
  * @var string|null $alamatProfil
  * @var string $tokenCsrf
@@ -29,13 +30,44 @@
                                         </li>
 <?php endforeach ?>
 <?php $this->placeholder('menu-samping')->captureEnd() ?>
-<?php $this->placeholder('menu-sebelum-tema')->captureStart() ?>
+<?php $this->placeholder('menu-alat')->captureStart() ?>
                             <li class="nav-item d-none d-lg-block">
                                 <button class="btn btn-link nav-link d-flex align-items-center" type="button" id="dashboardLayarPenuh" title="Layar penuh" aria-label="Layar penuh" hidden>
                                     <i class="bi bi-fullscreen"></i>
                                 </button>
                             </li>
-<?php $this->placeholder('menu-sebelum-tema')->captureEnd() ?>
+<?php $this->placeholder('menu-alat')->captureEnd() ?>
+<?php if ($this->notifikasi) : ?>
+<?php $n = $this->notifikasi ?>
+<?php $angka = $n['jumlah'] >= AdeMS\Dapur\Dashboard\PesanError::JUMLAH_MAKS ? $n['jumlah'] . '+' : (string) $n['jumlah'] ?>
+<?php $this->placeholder('menu-alat')->captureStart() ?>
+                            <li class="nav-item dropdown">
+                                <button class="btn btn-link nav-link position-relative d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifikasi<?= $n['jumlah'] > 0 ? ', ' . $angka . ' pesan error belum dibaca' : '' ?>">
+                                    <i class="bi bi-bell<?= $n['jumlah'] > 0 ? '-fill' : '' ?>"></i>
+<?php if ($n['jumlah'] > 0) : ?>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill text-bg-danger dashboard-notifikasi-angka" aria-hidden="true"><?= $this->escapeHtml($angka) ?></span>
+<?php endif ?>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end dashboard-notifikasi">
+                                    <li><h6 class="dropdown-header d-flex justify-content-between"><span><i class="bi bi-bug me-1"></i>Pesan Error</span><?php if ($n['jumlah'] > 0) : ?><span class="text-danger"><?= $this->escapeHtml($angka) ?> baru</span><?php endif ?></h6></li>
+<?php if ($n['terbaru'] === []) : ?>
+                                    <li><span class="dropdown-item-text small text-body-secondary">Belum ada error yang tercatat.</span></li>
+<?php endif ?>
+<?php foreach ($n['terbaru'] as $e) : ?>
+                                    <li>
+                                        <a class="dropdown-item small<?= $e['baru'] ? ' dashboard-notifikasi-baru' : '' ?>" href="<?= $this->escapeHtmlAttr($n['alamat'] . '?kode=' . rawurlencode((string) ($e['kode'] ?? ''))) ?>">
+                                            <div class="d-flex justify-content-between gap-3 text-body-secondary"><span><?php if ($e['baru']) : ?><span class="badge text-bg-danger me-1">baru</span><?php endif ?><?= $this->escapeHtml($e['waktuSetempat']) ?></span><code><?= $this->escapeHtml((string) ($e['kode'] ?? '')) ?></code></div>
+                                            <div class="text-truncate<?= $e['baru'] ? ' fw-semibold' : '' ?>"><?= $this->escapeHtml((string) ($e['host'] ?? '') . ($e['alamat'] ?? '')) ?></div>
+                                            <div class="text-truncate text-body-secondary"><?= $this->escapeHtml((string) ($e['pesan'] ?? '')) ?></div>
+                                        </a>
+                                    </li>
+<?php endforeach ?>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="<?= $this->escapeHtmlAttr($n['alamat']) ?>"><i class="bi bi-list-ul me-2"></i>Lihat semua</a></li>
+                                </ul>
+                            </li>
+<?php $this->placeholder('menu-alat')->captureEnd() ?>
+<?php endif ?>
 <?php if ($this->user) : ?>
 <?= $this->partial('user::menu-user', [
     'user'         => $this->user,
