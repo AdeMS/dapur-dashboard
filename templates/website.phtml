@@ -8,7 +8,6 @@
 $this->headTitle('Website');
 ?>
 <div class="container py-4">
-    <?= $this->partial('dashboard::menu', ['menu' => $this->menu, 'ruteAktif' => $this->ruteAktif, 'user' => $this->user, 'alamatKeluar' => $this->alamatKeluar, 'alamatProfil' => $this->alamatProfil, 'tokenCsrf' => $this->tokenCsrf, 'fieldCsrf' => $this->fieldCsrf]) ?>
     <h1 class="h3 mb-3">Website</h1>
 <?php if (! $this->multiWebsiteAktif) : ?>
     <p class="text-body-secondary">Multi-website belum aktif pada instalasi ini.</p>
