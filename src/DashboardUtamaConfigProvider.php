@@ -26,11 +26,13 @@ final class DashboardUtamaConfigProvider
 
         $config['dashboard']['alamat_dasar'] = '/';
         $config['dashboard']['utama']        = true;
-        $config['dashboard']['menu'][]       = [
+
+        // Website disisipkan sesudah Ringkasan, sebelum menu lainnya.
+        array_splice($config['dashboard']['menu'], 1, 0, [[
             'label' => 'Website',
             'rute'  => 'dashboard.website',
             'ikon'  => 'globe',
-        ];
+        ]]);
 
         return $config;
     }
