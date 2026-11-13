@@ -1,0 +1,116 @@
+<?php
+/**
+ * Halaman Pesan Error: error terbaru dari log error Dapur AdeMS, untuk admin super dan admin web.
+ *
+ * @var bool $ditolak
+ * @var bool $tidakTersedia
+ * @var list<array<string, mixed>> $error
+ * @var string|null $kode
+ * @var string|null $belumSiap   pesan bila tanda "sudah dibaca" belum bisa disimpan
+ * @var bool $adaBaru            ada error yang belum dibaca di daftar
+ * @var int|null $lebihBanyak    jumlah untuk tombol "Tampilkan lebih banyak", atau null bila semua sudah tampil
+ * @var string $tokenCsrf
+ * @var string $fieldCsrf
+ * @var string $zonaWaktu
+ * @var int $jumlahMaks
+ */
+$this->headTitle('Pesan Error');
+$alamat = $this->url('dashboard.error');
+?>
+<h1 class="h3 mb-3">Pesan Error</h1>
+<?php if ($this->ditolak) : ?>
+<div class="alert alert-warning">Halaman ini hanya untuk admin super dan admin web.</div>
+<?php elseif ($this->tidakTersedia) : ?>
+<div class="alert alert-info">Log error tersedia mulai Dapur AdeMS 2.8. Perbarui inti Dapur untuk memakai halaman ini.</div>
+<?php else : ?>
+<?php if ($this->belumSiap !== null) : ?>
+<div class="alert alert-warning"><?= $this->escapeHtml($this->belumSiap) ?></div>
+<?php endif ?>
+<form class="row g-2 align-items-end mb-3" method="get" action="<?= $this->escapeHtmlAttr($alamat) ?>">
+    <div class="col-8 col-sm-5 col-lg-3">
+        <label class="form-label small" for="cari-kode">Cari kode kesalahan</label>
+        <input class="form-control" id="cari-kode" name="kode" value="<?= $this->escapeHtmlAttr((string) $this->kode) ?>" placeholder="mis. 7F3A09C2" maxlength="8" autocomplete="off">
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-success">Cari</button>
+<?php if ($this->kode !== null) : ?>
+        <a class="btn btn-outline-secondary" href="<?= $this->escapeHtmlAttr($alamat) ?>">Semua</a>
+<?php endif ?>
+    </div>
+</form>
+<?php if ($this->error === []) : ?>
+<p class="text-body-secondary"><?= $this->kode !== null ? 'Kode ' . $this->escapeHtml($this->kode) . ' tidak ditemukan.' : 'Belum ada error yang tercatat.' ?></p>
+<?php else : ?>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+    <p class="small text-body-secondary mb-0"><?= $this->kode !== null ? 'Hasil pencarian kode.' : sprintf('%d error terbaru%s.', count($this->error), $this->lebihBanyak === null ? '' : ' (masih ada yang lebih lama)') ?> Waktu <?= $this->escapeHtml($this->zonaWaktu) ?>. Klik untuk melihat jejak pemanggilan; error yang dibuka ditandai sudah dibaca.</p>
+<?php if ($this->adaBaru) : ?>
+    <form method="post" action="<?= $this->escapeHtmlAttr($alamat) ?>">
+        <input type="hidden" name="<?= $this->escapeHtmlAttr($this->fieldCsrf) ?>" value="<?= $this->escapeHtmlAttr($this->tokenCsrf) ?>">
+        <input type="hidden" name="aksi" value="semua">
+        <button type="submit" class="btn btn-sm btn-outline-success"><i class="bi bi-check2-all me-1"></i>Tandai semua sudah dibaca</button>
+    </form>
+<?php endif ?>
+</div>
+<div class="accordion" id="daftarError" data-alamat="<?= $this->escapeHtmlAttr($alamat) ?>" data-field="<?= $this->escapeHtmlAttr($this->fieldCsrf) ?>" data-token="<?= $this->escapeHtmlAttr($this->tokenCsrf) ?>">
+<?php foreach ($this->error as $i => $e) : ?>
+    <div class="accordion-item" id="item-<?= (int) $i ?>"<?= $e['baru'] ? ' data-baru="1"' : '' ?> data-kode="<?= $this->escapeHtmlAttr((string) ($e['kode'] ?? '')) ?>">
+        <h2 class="accordion-header">
+            <button class="accordion-button<?= $this->kode !== null ? '' : ' collapsed' ?>" type="button" data-bs-toggle="collapse" data-bs-target="#error-<?= (int) $i ?>" aria-expanded="<?= $this->kode !== null ? 'true' : 'false' ?>" aria-controls="error-<?= (int) $i ?>">
+                <span class="d-flex flex-column flex-md-row gap-md-3 w-100 me-2">
+                    <span class="text-nowrap small"><?php if ($e['baru']) : ?><span class="badge text-bg-danger me-1 dashboard-error-baru">baru</span><?php endif ?><code><?= $this->escapeHtml((string) ($e['kode'] ?? '')) ?></code> <?= $this->escapeHtml($e['waktuSetempat']) ?></span>
+                    <span class="text-truncate"><span class="badge text-bg-danger me-1"><?= $this->escapeHtml((string) ($e['status'] ?? '')) ?></span><?= $this->escapeHtml((string) ($e['host'] ?? '') . ($e['alamat'] ?? '')) ?></span>
+                </span>
+            </button>
+        </h2>
+        <div id="error-<?= (int) $i ?>" class="accordion-collapse collapse<?= $this->kode !== null ? ' show' : '' ?>" data-bs-parent="#daftarError">
+            <div class="accordion-body">
+                <p class="mb-1"><strong><?= $this->escapeHtml((string) ($e['kelas'] ?? '')) ?></strong>: <?= $this->escapeHtml((string) ($e['pesan'] ?? '')) ?></p>
+                <p class="small text-body-secondary mb-2"><?= $this->escapeHtml((string) ($e['metode'] ?? '')) ?> · <?= $this->escapeHtml((string) ($e['file'] ?? '')) ?>:<?= (int) ($e['baris'] ?? 0) ?></p>
+<?php foreach ($e['sebelumnya'] ?? [] as $p) : ?>
+                <p class="small mb-1">Penyebab: <strong><?= $this->escapeHtml((string) ($p['kelas'] ?? '')) ?></strong>: <?= $this->escapeHtml((string) ($p['pesan'] ?? '')) ?> <span class="text-body-secondary">(<?= $this->escapeHtml((string) ($p['file'] ?? '')) ?>:<?= (int) ($p['baris'] ?? 0) ?>)</span></p>
+<?php endforeach ?>
+<?php if (($e['jejak'] ?? []) !== []) : ?>
+                <pre class="small bg-body-tertiary p-2 mb-0 mt-2"><?php foreach ($e['jejak'] as $n => $j) : ?>#<?= (int) $n ?> <?= $this->escapeHtml((string) $j) ?>
+<?php endforeach ?></pre>
+<?php endif ?>
+            </div>
+        </div>
+    </div>
+<?php endforeach ?>
+</div>
+<?php if ($this->lebihBanyak !== null) : ?>
+<div class="text-center mt-3">
+    <a class="btn btn-outline-success" href="<?= $this->escapeHtmlAttr($alamat . '?jumlah=' . $this->lebihBanyak . '#item-' . count($this->error)) ?>"><i class="bi bi-chevron-double-down me-1"></i>Tampilkan lebih banyak</a>
+</div>
+<?php endif ?>
+<script>
+    // Membuka detail error yang belum dibaca menandainya sudah dibaca, lalu mengurangi angka di lonceng notifikasi.
+    (() => {
+        const daftar = document.getElementById('daftarError');
+        daftar.addEventListener('show.bs.collapse', (peristiwa) => {
+            const item = peristiwa.target.closest('.accordion-item');
+            if (! item || item.dataset.baru !== '1') {
+                return;
+            }
+
+            item.dataset.baru = '0';
+            const isi = new URLSearchParams({aksi: 'baca', kode: item.dataset.kode});
+            isi.set(daftar.dataset.field, daftar.dataset.token);
+            fetch(daftar.dataset.alamat, {method: 'POST', body: isi, credentials: 'same-origin'}).then((jawaban) => {
+                if (! jawaban.ok) {
+                    item.dataset.baru = '1';
+                    return;
+                }
+
+                item.querySelector('.dashboard-error-baru')?.remove();
+                const angka = document.querySelector('.dashboard-notifikasi-angka');
+                if (angka && /^[0-9]+$/.test(angka.textContent)) {
+                    const sisa = parseInt(angka.textContent, 10) - 1;
+                    sisa > 0 ? angka.textContent = sisa : angka.remove();
+                }
+            });
+        });
+    })();
+</script>
+<?php endif ?>
+<?php endif ?>
