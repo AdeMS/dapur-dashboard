@@ -64,7 +64,7 @@ final class PengaturanTest extends TestCase
 
         self::assertFalse($config['dashboard']['utama']);
         self::assertSame('/dashboard', $config['dashboard']['alamat_dasar']);
-        self::assertSame(['dashboard.ringkasan'], array_column($config['dashboard']['menu'], 'rute'));
+        self::assertSame(['dashboard.ringkasan', 'dashboard.user'], array_column($config['dashboard']['menu'], 'rute'));
     }
 
     public function testPintuMengikutiPengaturanDashboard(): void
@@ -97,6 +97,7 @@ final class PengaturanTest extends TestCase
         self::assertArrayHasKey(MulaiSesiMiddleware::class, $config['dependencies']['factories']);
         self::assertArrayHasKey(ConfigProvider::MASUK, $config['dependencies']['factories']);
         self::assertArrayHasKey(ConfigProvider::PROFIL, $config['dependencies']['factories']);
+        self::assertArrayHasKey(ConfigProvider::KELOLA_USER, $config['dependencies']['factories']);
         self::assertArrayHasKey('user', $config['templates']['paths']);
         self::assertArrayHasKey('dashboard', $config['templates']['paths']);
         // Tanpa nilai bawaan, agar pengaturan 'user' inti tidak tertimpa saat modul dipasang di website.
@@ -110,7 +111,10 @@ final class PengaturanTest extends TestCase
 
         self::assertTrue($config['dashboard']['utama']);
         self::assertSame('/', $config['dashboard']['alamat_dasar']);
-        self::assertContains('dashboard.website', array_column($config['dashboard']['menu'], 'rute'));
+        self::assertSame(
+            ['dashboard.ringkasan', 'dashboard.website', 'dashboard.user'],
+            array_column($config['dashboard']['menu'], 'rute'),
+        );
     }
 
     #[RunInSeparateProcess]
@@ -119,5 +123,14 @@ final class PengaturanTest extends TestCase
         Website::aktifkan(Website::dariFolderDomain('blog.contoh.com', '/tmp/blog'));
 
         self::assertSame([], (new DashboardUtamaConfigProvider())());
+    }
+
+    public function testMenuUserHanyaUntukAdmin(): void
+    {
+        $atur = new Pengaturan((new ConfigProvider())()['dashboard']);
+        $menu = array_column($atur->menu, 'peran', 'rute');
+
+        self::assertNull($menu['dashboard.ringkasan']);
+        self::assertSame('admin', $menu['dashboard.user']);
     }
 }
