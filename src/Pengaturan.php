@@ -14,7 +14,7 @@ final class Pengaturan
     public readonly string $layout;
     public readonly int $batasDiam;
 
-    /** @var list<array{label: string, rute: string, ikon: string}> */
+    /** @var list<array{label: string, rute: string, ikon: string, peran: ?string}> */
     public readonly array $menu;
 
     /** @param array<string, mixed> $config */
@@ -32,6 +32,7 @@ final class Pengaturan
                     'label' => $item['label'],
                     'rute'  => $item['rute'],
                     'ikon'  => is_string($item['ikon'] ?? null) ? $item['ikon'] : 'circle',
+                    'peran' => is_string($item['peran'] ?? null) ? $item['peran'] : null,
                 ];
             }
         }
