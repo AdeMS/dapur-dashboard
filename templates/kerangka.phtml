@@ -1,0 +1,78 @@
+<?php
+/**
+ * Kerangka semua halaman dashboard. Tampilan merender halaman lebih dulu, lalu memasukkan hasilnya ke kerangka
+ * ini sebagai $isi.
+ *
+ * Kerangka tidak membuat tata letak sendiri: item menu dashboard dikirim ke placeholder 'menu-samping', tombol
+ * layar penuh (hanya layar besar) ke 'menu-sebelum-tema', dan menu user (avatar) ke 'menu-kanan'. Layout Dapur
+ * (2.7 atau lebih baru) menampilkan menu samping di kiri, dan di layar kecil membukanya lewat tombol menu
+ * (hamburger) di navbar.
+ *
+ * @var string $isi                   HTML halaman yang sudah dirender
+ * @var list<array{label: string, rute: string, ikon: string, peran: ?string}> $menu
+ * @var string|null $ruteAktif
+ * @var AdeMS\Dapur\User\User|null $user
+ * @var string $alamatKeluar
+ * @var string|null $alamatProfil
+ * @var string $tokenCsrf
+ * @var string $fieldCsrf
+ */
+?>
+<?php $this->placeholder('menu-samping')->captureStart() ?>
+                                        <li class="dapur-samping-judul d-none d-lg-block">Dashboard</li>
+<?php foreach ($this->menu as $item) : ?>
+<?php $aktif = $item['rute'] === $this->ruteAktif ?>
+                                        <li class="nav-item">
+                                            <a class="nav-link<?= $aktif ? ' active' : '' ?>" href="<?= $this->escapeHtmlAttr($this->url($item['rute'])) ?>"<?= $aktif ? ' aria-current="page"' : '' ?>>
+                                                <i class="bi bi-<?= $this->escapeHtmlAttr($item['ikon']) ?>"></i><?= $this->escapeHtml($item['label']) ?>
+                                            </a>
+                                        </li>
+<?php endforeach ?>
+<?php $this->placeholder('menu-samping')->captureEnd() ?>
+<?php $this->placeholder('menu-sebelum-tema')->captureStart() ?>
+                            <li class="nav-item d-none d-lg-block">
+                                <button class="btn btn-link nav-link d-flex align-items-center" type="button" id="dashboardLayarPenuh" title="Layar penuh" aria-label="Layar penuh" hidden>
+                                    <i class="bi bi-fullscreen"></i>
+                                </button>
+                            </li>
+<?php $this->placeholder('menu-sebelum-tema')->captureEnd() ?>
+<?php if ($this->user) : ?>
+<?= $this->partial('user::menu-user', [
+    'user'         => $this->user,
+    'alamatKeluar' => $this->alamatKeluar,
+    'alamatProfil' => $this->alamatProfil ?? null,
+    'tokenCsrf'    => $this->tokenCsrf,
+    'fieldCsrf'    => $this->fieldCsrf,
+]) ?>
+<?php endif ?>
+<?= $this->isi ?>
+<script>
+    // Tombol layar penuh (hanya di layar besar). Disembunyikan bila browser tidak mendukung layar penuh.
+    (() => {
+        const tombol = document.getElementById('dashboardLayarPenuh');
+        const d = document;
+        const didukung = d.fullscreenEnabled || d.webkitFullscreenEnabled;
+        if (! tombol || ! didukung) {
+            return;
+        }
+        const aktif = () => d.fullscreenElement || d.webkitFullscreenElement;
+        const perbarui = () => {
+            const penuh = Boolean(aktif());
+            const teks = penuh ? 'Keluar dari layar penuh' : 'Layar penuh';
+            tombol.querySelector('i').className = penuh ? 'bi bi-fullscreen-exit' : 'bi bi-fullscreen';
+            tombol.title = teks;
+            tombol.setAttribute('aria-label', teks);
+        };
+        tombol.addEventListener('click', () => {
+            const el = d.documentElement;
+            if (aktif()) {
+                (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+            } else {
+                (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+            }
+        });
+        d.addEventListener('fullscreenchange', perbarui);
+        d.addEventListener('webkitfullscreenchange', perbarui);
+        tombol.hidden = false;
+    })();
+</script>
