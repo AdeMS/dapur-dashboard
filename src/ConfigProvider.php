@@ -38,7 +38,7 @@ final class ConfigProvider
                 'batas_diam'   => 3600,
                 'menu'         => [
                     ['label' => 'Ringkasan', 'rute' => 'dashboard.ringkasan', 'ikon' => 'speedometer2'],
-                    // 'peran': menu hanya tampil untuk user dengan peran ini
+                    // 'peran': menu hanya tampil untuk user dengan peran ini ('admin' = admin super atau admin web)
                     ['label' => 'User', 'rute' => 'dashboard.user', 'ikon' => 'people', 'peran' => 'admin'],
                 ],
             ],
@@ -56,6 +56,8 @@ final class ConfigProvider
                     self::KELUAR,
                     self::PROFIL,
                     self::KELOLA_USER,
+                    PesanError::class,
+                    Handler\PesanErrorHandler::class,
                     Handler\RingkasanHandler::class,
                     Handler\WebsiteHandler::class,
                 ], PabrikLayanan::class),
