@@ -1,0 +1,28 @@
+<?php
+/**
+ * Halaman Pengaturan & Privasi di dashboard: isi dari paket adems/dapur-user (Akun Saya, Aktivitas, Riwayat masuk).
+ * Menu samping dan menu user ditambahkan oleh kerangka dashboard (Tampilan).
+ *
+ * @var AdeMS\Dapur\User\User $user
+ */
+$this->headTitle('Pengaturan & Privasi');
+?>
+<?= $this->partial('user::pengaturan-isi', [
+    'user'         => $this->user,
+    'pesan'        => $this->pesan,
+    'galat'        => $this->galat,
+    'galatBagian'  => $this->galatBagian,
+    'nama'         => $this->nama,
+    'alamatPengaturan' => $this->alamatPengaturan,
+    'minimalSandi' => $this->minimalSandi,
+    'zonaWaktu'    => $this->zonaWaktu,
+    'riwayat'      => $this->riwayat,
+    'aktivitas'    => $this->aktivitas,
+    'aktivitasLagi' => $this->aktivitasLagi,
+    'riwayatLagi'  => $this->riwayatLagi,
+    'bisaGantiEmail' => $this->bisaGantiEmail,
+    'emailBaru'    => $this->emailBaru,
+    'tab'          => $this->tab,
+    'tokenCsrf'    => $this->tokenCsrf,
+    'fieldCsrf'    => $this->fieldCsrf,
+]) ?>
