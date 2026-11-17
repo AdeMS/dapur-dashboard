@@ -7,7 +7,8 @@ Dapur, atau sebagai dashboard milik satu website.
 ## Kebutuhan
 
 - Dapur AdeMS 2.9 atau lebih baru (layout dengan menu samping dan placeholder `menu-alat`, log error)
-- [adems/dapur-user](https://github.com/AdeMS/dapur-user) 2.0 (ikut terpasang otomatis)
+- [adems/dapur-user](https://github.com/AdeMS/dapur-user) 2.1 (ikut terpasang otomatis, bersama
+  [adems/dapur-email](https://github.com/AdeMS/dapur-email))
 - MariaDB atau MySQL yang sudah diatur di `config/autoload/database.local.php` (SQLite juga bisa dipakai)
 - [adems/dapur-multiwebsite](https://github.com/AdeMS/dapur-multiwebsite) 1.1 atau lebih baru, untuk halaman
   daftar website dan dashboard per website; 1.2 agar dashboard utama membaca log error semua website
@@ -19,7 +20,7 @@ Tulis paketnya di `composer.local.json`, lalu jalankan `composer update`:
 ```json
 {
     "require": {
-        "adems/dapur-dashboard": "^2.3"
+        "adems/dapur-dashboard": "^2.4"
     }
 }
 ```
@@ -73,12 +74,32 @@ vendor/bin/dapur-user buat-admin admin@contoh.com --website=contoh.com
 Akses diberikan per lingkup: admin dashboard utama tidak otomatis bisa masuk ke dashboard website, dan
 sebaliknya. Website yang tidak mengaktifkan modul ini tidak memiliki alamat dashboard.
 
-### Profil
+### Profil dan Pengaturan & Privasi
 
-Setiap dashboard punya halaman profil dari paket user, di `/profil` (dashboard utama) atau `/dashboard/profil`
-(dashboard website), dengan tautan di submenu avatar. Di sana user mengubah nama, mengganti kata sandi, dan
-melihat riwayat loginnya. Halaman ini tampil dengan menu dashboard; isinya dijelaskan di
+Setiap dashboard punya dua halaman milik user dari paket user, dengan tautan di submenu avatar:
+
+| Dashboard utama | Dashboard website        | Isi                                                             |
+|-----------------|--------------------------|-----------------------------------------------------------------|
+| `/profil`       | `/dashboard/profil`      | kartu user (hanya dibaca)                                       |
+| `/pengaturan`   | `/dashboard/pengaturan`  | Pengaturan & Privasi: Akun Saya (nama, email, kata sandi), Aktivitas, Riwayat masuk |
+
+Keduanya tampil dengan menu dashboard; isinya dijelaskan di
 [README dapur-user](https://github.com/AdeMS/dapur-user#profil).
+
+### Email: undangan, lupa kata sandi, dan ganti email
+
+Bila pengiriman email diatur (lihat [README dapur-email](https://github.com/AdeMS/dapur-email#pengaturan)),
+dashboard menyediakan halaman dari paket user untuk tautan di email. Halaman ini bisa dibuka tanpa login:
+
+| Dashboard utama     | Dashboard website             | Kegunaan                                              |
+|---------------------|-------------------------------|-------------------------------------------------------|
+| `/lupa-sandi`       | `/dashboard/lupa-sandi`       | meminta tautan atur ulang kata sandi                  |
+| `/atur-sandi`       | `/dashboard/atur-sandi`       | membuat kata sandi dari undangan atau tautan lupa sandi |
+| `/verifikasi-email` | `/dashboard/verifikasi-email` | mengonfirmasi email baru dari halaman Profil          |
+
+Tanpa email, `/lupa-sandi` menjawab 404, tautan "Lupa kata sandi?" di halaman masuk tidak tampil, dan user baru
+tetap mendapat kata sandi sementara seperti sebelumnya. Rinciannya ada di
+[README dapur-user](https://github.com/AdeMS/dapur-user#email).
 
 ### Menu samping
 
@@ -112,11 +133,20 @@ Item menu bisa dibatasi untuk peran tertentu dengan kunci `'peran'`. Nilai `'adm
 ],
 ```
 
+Menu samping dibagi menjadi kelompok berjudul. Bawaannya **Dashboard** (Ringkasan) dan **Pengaturan** (Website di
+dashboard utama, lalu User). Kunci `'kelompok'` menentukan judul kelompok sebuah item; tanpa kunci itu item masuk
+kelompok Dashboard. Item dengan kelompok yang sama selalu tampil bersama, urut menurut kemunculan pertama
+kelompoknya, dan judul kelompok yang tidak berisi item untuk user itu tidak ditampilkan:
+
+```php
+['label' => 'Tampilan', 'rute' => 'tampilan', 'ikon' => 'palette', 'kelompok' => 'Pengaturan'],
+```
+
 ### Pesan Error
 
 Admin super dan admin web melihat ikon lonceng di navbar, di antara tombol layar penuh dan avatar. Angkanya menunjukkan jumlah error yang
 belum dibaca oleh admin itu (lebih dari 99 ditampilkan "99+"). Dropdown-nya menampilkan 5 error terakhir, dengan
-label **baru** untuk yang belum dibaca, dan tautan **Lihat semua**.
+label **belum dibaca**, dan tautan **Lihat semua**.
 
 Halaman Pesan Error berada di `/error` (dashboard utama) atau `/dashboard/error` (dashboard website):
 
@@ -162,10 +192,30 @@ return [
 Website bisa memakai database sendiri lewat `config/autoload/*.local.php` miliknya. Untuk dashboard yang sama
 sekali berbeda, buat modul sendiri di folder `module/` website tanpa paket ini.
 
+## Memperbarui dari 2.3
+
+Dashboard 2.4 memakai adems/dapur-user 2.1, yang menambah undangan, lupa kata sandi, dan ganti email lewat email.
+Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.4"`, lalu jalankan dari folder inti:
+
+```bash
+composer update
+vendor/bin/dapur-user pasang
+```
+
+lalu hapus cache konfigurasi. `pasang` membuat tabel `user_token`; sebelum itu fitur email belum bisa dipakai.
+Fitur email aktif setelah pengiriman email diatur; tanpa itu dashboard berjalan seperti 2.3.
+
+Ubah nama, ganti kata sandi, aktivitas, dan riwayat masuk pindah dari Profil ke halaman baru **Pengaturan &
+Privasi** (`/pengaturan`);
+tautan lama `/profil?tab=...` dialihkan ke sana. Halaman dashboard tampil paling bagus dengan inti Dapur 2.9.1
+(navbar dan menu samping selebar isi halaman).
+
 ## Memperbarui dari 2.2
 
+Langkah dari 2.3 di atas juga berlaku (satu kali `composer update` dan `pasang` cukup). Perubahan dari 2.2 ke 2.3:
+
 Dashboard 2.3 memakai adems/dapur-user 2.0, yang mengganti peran `admin` dengan admin super dan admin web. Ubah
-`composer.local.json` menjadi `"adems/dapur-dashboard": "^2.3"`, lalu jalankan dari folder inti:
+`composer.local.json` menjadi `"adems/dapur-dashboard": "^2.4"`, lalu jalankan dari folder inti:
 
 ```bash
 composer update
@@ -205,7 +255,7 @@ Ikuti langkah dari 2.2 dan 2.1 di atas.
 Login, user, dan perintahnya pindah ke paket [adems/dapur-user](https://github.com/AdeMS/dapur-user), yang
 ikut terpasang otomatis.
 
-1. Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.3"`, lalu jalankan `composer update`.
+1. Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.4"`, lalu jalankan `composer update`.
 2. Versi 1.x selalu memakai tabel `adems_user`, `adems_user_akses`, dan `adems_percobaan_masuk`. Untuk tetap
    memakai tabel itu, atur awalan `adems_` di `config/autoload/*.php` milik inti:
 
