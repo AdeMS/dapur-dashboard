@@ -23,7 +23,13 @@ final class ConfigProvider
     public const MASUK       = 'dashboard.handler.masuk';
     public const KELUAR      = 'dashboard.handler.keluar';
     public const PROFIL      = 'dashboard.handler.profil';
+    public const PENGATURAN  = 'dashboard.handler.pengaturan';
     public const KELOLA_USER = 'dashboard.handler.user';
+
+    /** Halaman tautan email (tanpa login): lupa kata sandi, membuat kata sandi, dan konfirmasi email baru. */
+    public const LUPA_SANDI       = 'dashboard.handler.lupa_sandi';
+    public const ATUR_SANDI       = 'dashboard.handler.atur_sandi';
+    public const VERIFIKASI_EMAIL = 'dashboard.handler.verifikasi_email';
 
     /** @return array<string, mixed> */
     public function __invoke(): array
@@ -38,8 +44,9 @@ final class ConfigProvider
                 'batas_diam'   => 3600,
                 'menu'         => [
                     ['label' => 'Ringkasan', 'rute' => 'dashboard.ringkasan', 'ikon' => 'speedometer2'],
-                    // 'peran': menu hanya tampil untuk user dengan peran ini ('admin' = admin super atau admin web)
-                    ['label' => 'User', 'rute' => 'dashboard.user', 'ikon' => 'people', 'peran' => 'admin'],
+                    // 'peran': menu hanya tampil untuk user dengan peran ini ('admin' = admin super atau admin web).
+                    // 'kelompok': judul kelompok di menu samping (tanpa kunci ini: 'Dashboard').
+                    ['label' => 'User', 'rute' => 'dashboard.user', 'ikon' => 'people', 'peran' => 'admin', 'kelompok' => 'Pengaturan'],
                 ],
             ],
             'templates'    => [
@@ -55,7 +62,11 @@ final class ConfigProvider
                     self::MASUK,
                     self::KELUAR,
                     self::PROFIL,
+                    self::PENGATURAN,
                     self::KELOLA_USER,
+                    self::LUPA_SANDI,
+                    self::ATUR_SANDI,
+                    self::VERIFIKASI_EMAIL,
                     PesanError::class,
                     Handler\PesanErrorHandler::class,
                     Handler\RingkasanHandler::class,
