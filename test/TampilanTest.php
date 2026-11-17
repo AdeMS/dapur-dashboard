@@ -97,6 +97,7 @@ final class TampilanTest extends TestCase
         self::assertSame(['dashboard.ringkasan', 'dashboard.user'], array_column($data['menu'], 'rute'));
         self::assertSame('admin', $data['peranUser']);
         self::assertSame('/dashboard/profil', $data['alamatProfil']);
+        self::assertSame('/dashboard/pengaturan', $data['alamatPengaturan']);
     }
 
     public function testAdminSuperDanAdminWebMelihatMenuUser(): void
@@ -109,6 +110,24 @@ final class TampilanTest extends TestCase
     public function testAnggotaTidakMelihatMenuUser(): void
     {
         self::assertSame(['dashboard.ringkasan'], array_column($this->render('anggota')['menu'], 'rute'));
+    }
+
+    public function testMenuDikumpulkanPerKelompok(): void
+    {
+        $tampilan = new Tampilan($this->rendererKosong(), new Pengaturan(['menu' => [
+            ['label' => 'Ringkasan', 'rute' => 'a'],
+            ['label' => 'User', 'rute' => 'b', 'kelompok' => 'Pengaturan'],
+            ['label' => 'Laporan', 'rute' => 'c'],
+        ]]));
+        $menu = (new \ReflectionMethod($tampilan, 'menu'))->invoke($tampilan, 'anggota');
+
+        self::assertSame(['a', 'c', 'b'], array_column($menu, 'rute'));
+        self::assertSame(['Dashboard', 'Dashboard', 'Pengaturan'], array_column($menu, 'kelompok'));
+    }
+
+    private function rendererKosong(): TemplateRendererInterface
+    {
+        return $this->createStub(TemplateRendererInterface::class);
     }
 
     public function testTanpaPesanErrorTidakAdaNotifikasi(): void
