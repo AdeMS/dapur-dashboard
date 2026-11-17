@@ -98,6 +98,13 @@ final class PengaturanTest extends TestCase
         self::assertArrayHasKey(ConfigProvider::MASUK, $config['dependencies']['factories']);
         self::assertArrayHasKey(ConfigProvider::PROFIL, $config['dependencies']['factories']);
         self::assertArrayHasKey(ConfigProvider::KELOLA_USER, $config['dependencies']['factories']);
+
+        // Setiap layanan bernama milik dashboard (dipakai route) harus punya factory.
+        foreach ((new \ReflectionClass(ConfigProvider::class))->getConstants() as $nama => $layanan) {
+            if (is_string($layanan) && str_starts_with($layanan, 'dashboard.')) {
+                self::assertArrayHasKey($layanan, $config['dependencies']['factories'], "Factory {$nama} belum didaftarkan.");
+            }
+        }
         self::assertArrayHasKey('user', $config['templates']['paths']);
         self::assertArrayHasKey('dashboard', $config['templates']['paths']);
         // Tanpa nilai bawaan, agar pengaturan 'user' inti tidak tertimpa saat modul dipasang di website.
@@ -132,5 +139,19 @@ final class PengaturanTest extends TestCase
 
         self::assertNull($menu['dashboard.ringkasan']);
         self::assertSame('admin', $menu['dashboard.user']);
+    }
+
+    public function testKelompokMenu(): void
+    {
+        $atur = new Pengaturan(['menu' => [
+            ['label' => 'Ringkasan', 'rute' => 'dashboard.ringkasan'],
+            ['label' => 'User', 'rute' => 'dashboard.user', 'kelompok' => 'Pengaturan'],
+            ['label' => 'Laporan', 'rute' => 'laporan', 'kelompok' => '  '],
+        ]]);
+
+        self::assertSame(
+            ['dashboard.ringkasan' => 'Dashboard', 'dashboard.user' => 'Pengaturan', 'laporan' => 'Dashboard'],
+            array_column($atur->menu, 'kelompok', 'rute'),
+        );
     }
 }
