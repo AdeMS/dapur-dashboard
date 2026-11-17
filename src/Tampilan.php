@@ -60,6 +60,7 @@ final class Tampilan implements PenyajiHalaman
             'user'         => $user,
             'alamatKeluar' => $this->pengaturan->rute('/keluar'),
             'alamatProfil' => $this->pengaturan->rute('/profil'),
+            'alamatPengaturan' => $this->pengaturan->rute('/pengaturan'),
             'peranUser'    => $peran,
             'tokenCsrf'    => (new TokenCsrf($sesi))->token(),
             'fieldCsrf'    => TokenCsrf::FIELD,
@@ -98,17 +99,24 @@ final class Tampilan implements PenyajiHalaman
 
     /**
      * Menu yang boleh dilihat user ini: item dengan 'peran' hanya tampil untuk peran tersebut. Peran 'admin'
-     * berarti admin mana pun (admin super atau admin web).
+     * berarti admin mana pun (admin super atau admin web). Item dikumpulkan per kelompok, dengan urutan kelompok
+     * menurut kemunculan pertamanya, agar item tambahan dari website masuk ke kelompok yang sama.
      *
-     * @return list<array{label: string, rute: string, ikon: string, peran: ?string}>
+     * @return list<array{label: string, rute: string, ikon: string, peran: ?string, kelompok: string}>
      */
     private function menu(mixed $peran): array
     {
-        return array_values(array_filter(
-            $this->pengaturan->menu,
-            static fn (array $item): bool => $item['peran'] === null
+        $kelompok = [];
+        foreach ($this->pengaturan->menu as $item) {
+            if (
+                $item['peran'] === null
                 || $item['peran'] === $peran
-                || ($item['peran'] === 'admin' && DaftarUser::peranAdmin(is_string($peran) ? $peran : null)),
-        ));
+                || ($item['peran'] === 'admin' && DaftarUser::peranAdmin(is_string($peran) ? $peran : null))
+            ) {
+                $kelompok[$item['kelompok']][] = $item;
+            }
+        }
+
+        return $kelompok === [] ? [] : array_merge(...array_values($kelompok));
     }
 }
