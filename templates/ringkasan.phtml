@@ -7,6 +7,10 @@
 $this->headTitle('Dashboard');
 ?>
 <div class="container py-4">
-    <h1 class="h3">Dashboard <?= $this->escapeHtml($this->infoWebsite()->judul()) ?></h1>
-    <p class="text-body-secondary">Halo, <?= $this->escapeHtml($this->user->nama) ?>.</p>
+    <div class="card mb-4">
+        <div class="card-body py-3">
+            <h1 class="h4 mb-0">Dashboard <?= $this->escapeHtml($this->infoWebsite()->judul()) ?></h1>
+            <p class="small text-body-secondary mb-0 mt-1">Halo, <?= $this->escapeHtml($this->user->nama) ?>.</p>
+        </div>
+    </div>
 </div>
