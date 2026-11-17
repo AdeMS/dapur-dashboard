@@ -8,7 +8,11 @@
 $this->headTitle('Website');
 ?>
 <div class="container py-4">
-    <h1 class="h3 mb-3">Website</h1>
+    <div class="card mb-4">
+        <div class="card-body py-3">
+            <h1 class="h4 mb-0">Website</h1>
+        </div>
+    </div>
 <?php if (! $this->multiWebsiteAktif) : ?>
     <p class="text-body-secondary">Multi-website belum aktif pada instalasi ini.</p>
 <?php elseif (! $this->website) : ?>
