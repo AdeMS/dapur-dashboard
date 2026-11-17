@@ -17,7 +17,12 @@
 $this->headTitle('Pesan Error');
 $alamat = $this->url('dashboard.error');
 ?>
-<h1 class="h3 mb-3">Pesan Error</h1>
+<div class="container py-4">
+    <div class="card mb-4">
+        <div class="card-body py-3">
+            <h1 class="h4 mb-0">Pesan Error</h1>
+        </div>
+    </div>
 <?php if ($this->ditolak) : ?>
 <div class="alert alert-warning">Halaman ini hanya untuk admin super dan admin web.</div>
 <?php elseif ($this->tidakTersedia) : ?>
@@ -26,6 +31,9 @@ $alamat = $this->url('dashboard.error');
 <?php if ($this->belumSiap !== null) : ?>
 <div class="alert alert-warning"><?= $this->escapeHtml($this->belumSiap) ?></div>
 <?php endif ?>
+<!-- Pencarian dan keterangan di dalam kartu agar terbaca di atas gambar latar halaman -->
+<div class="card mb-3">
+<div class="card-body">
 <form class="row g-2 align-items-end mb-3" method="get" action="<?= $this->escapeHtmlAttr($alamat) ?>">
     <div class="col-8 col-sm-5 col-lg-3">
         <label class="form-label small" for="cari-kode">Cari kode kesalahan</label>
@@ -39,9 +47,11 @@ $alamat = $this->url('dashboard.error');
     </div>
 </form>
 <?php if ($this->error === []) : ?>
-<p class="text-body-secondary"><?= $this->kode !== null ? 'Kode ' . $this->escapeHtml($this->kode) . ' tidak ditemukan.' : 'Belum ada error yang tercatat.' ?></p>
+<p class="text-body-secondary mb-0"><?= $this->kode !== null ? 'Kode ' . $this->escapeHtml($this->kode) . ' tidak ditemukan.' : 'Belum ada error yang tercatat.' ?></p>
+</div>
+</div>
 <?php else : ?>
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
     <p class="small text-body-secondary mb-0"><?= $this->kode !== null ? 'Hasil pencarian kode.' : sprintf('%d error terbaru%s.', count($this->error), $this->lebihBanyak === null ? '' : ' (masih ada yang lebih lama)') ?> Waktu <?= $this->escapeHtml($this->zonaWaktu) ?>. Klik untuk melihat jejak pemanggilan; error yang dibuka ditandai sudah dibaca.</p>
 <?php if ($this->adaBaru) : ?>
     <form method="post" action="<?= $this->escapeHtmlAttr($alamat) ?>">
@@ -51,13 +61,15 @@ $alamat = $this->url('dashboard.error');
     </form>
 <?php endif ?>
 </div>
+</div>
+</div>
 <div class="accordion" id="daftarError" data-alamat="<?= $this->escapeHtmlAttr($alamat) ?>" data-field="<?= $this->escapeHtmlAttr($this->fieldCsrf) ?>" data-token="<?= $this->escapeHtmlAttr($this->tokenCsrf) ?>">
 <?php foreach ($this->error as $i => $e) : ?>
     <div class="accordion-item" id="item-<?= (int) $i ?>"<?= $e['baru'] ? ' data-baru="1"' : '' ?> data-kode="<?= $this->escapeHtmlAttr((string) ($e['kode'] ?? '')) ?>">
         <h2 class="accordion-header">
             <button class="accordion-button<?= $this->kode !== null ? '' : ' collapsed' ?>" type="button" data-bs-toggle="collapse" data-bs-target="#error-<?= (int) $i ?>" aria-expanded="<?= $this->kode !== null ? 'true' : 'false' ?>" aria-controls="error-<?= (int) $i ?>">
                 <span class="d-flex flex-column flex-md-row gap-md-3 w-100 me-2">
-                    <span class="text-nowrap small"><?php if ($e['baru']) : ?><span class="badge text-bg-danger me-1 dashboard-error-baru">baru</span><?php endif ?><code><?= $this->escapeHtml((string) ($e['kode'] ?? '')) ?></code> <?= $this->escapeHtml($e['waktuSetempat']) ?></span>
+                    <span class="text-nowrap small"><?php if ($e['baru']) : ?><span class="badge text-bg-danger me-1 dashboard-error-baru">belum dibaca</span><?php endif ?><code><?= $this->escapeHtml((string) ($e['kode'] ?? '')) ?></code> <?= $this->escapeHtml($e['waktuSetempat']) ?></span>
                     <span class="text-truncate"><span class="badge text-bg-danger me-1"><?= $this->escapeHtml((string) ($e['status'] ?? '')) ?></span><?= $this->escapeHtml((string) ($e['host'] ?? '') . ($e['alamat'] ?? '')) ?></span>
                 </span>
             </button>
@@ -70,8 +82,8 @@ $alamat = $this->url('dashboard.error');
                 <p class="small mb-1">Penyebab: <strong><?= $this->escapeHtml((string) ($p['kelas'] ?? '')) ?></strong>: <?= $this->escapeHtml((string) ($p['pesan'] ?? '')) ?> <span class="text-body-secondary">(<?= $this->escapeHtml((string) ($p['file'] ?? '')) ?>:<?= (int) ($p['baris'] ?? 0) ?>)</span></p>
 <?php endforeach ?>
 <?php if (($e['jejak'] ?? []) !== []) : ?>
-                <pre class="small bg-body-tertiary p-2 mb-0 mt-2"><?php foreach ($e['jejak'] as $n => $j) : ?>#<?= (int) $n ?> <?= $this->escapeHtml((string) $j) ?>
-<?php endforeach ?></pre>
+                <!-- Baris baru ditulis lewat "\n": PHP membuang baris baru yang tepat sesudah tanda penutup ?> -->
+                <pre class="small bg-body-tertiary p-2 mb-0 mt-2"><?php foreach ($e['jejak'] as $n => $j) : ?><?= '#' . (int) $n . ' ' . $this->escapeHtml((string) $j) . "\n" ?><?php endforeach ?></pre>
 <?php endif ?>
             </div>
         </div>
@@ -114,3 +126,4 @@ $alamat = $this->url('dashboard.error');
 </script>
 <?php endif ?>
 <?php endif ?>
+</div>
