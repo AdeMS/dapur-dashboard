@@ -9,19 +9,24 @@
  * kecil membukanya lewat tombol menu (hamburger) di navbar.
  *
  * @var string $isi                   HTML halaman yang sudah dirender
- * @var list<array{label: string, rute: string, ikon: string, peran: ?string}> $menu
+ * @var list<array{label: string, rute: string, ikon: string, peran: ?string, kelompok: string}> $menu
  * @var string|null $ruteAktif
  * @var AdeMS\Dapur\User\User|null $user
  * @var array{jumlah: int, terbaru: list<array<string, mixed>>, alamat: string}|null $notifikasi
  * @var string $alamatKeluar
  * @var string|null $alamatProfil
+ * @var string|null $alamatPengaturan
  * @var string $tokenCsrf
  * @var string $fieldCsrf
  */
 ?>
 <?php $this->placeholder('menu-samping')->captureStart() ?>
-                                        <li class="dapur-samping-judul d-none d-lg-block">Dashboard</li>
+<?php $kelompok = null ?>
 <?php foreach ($this->menu as $item) : ?>
+<?php if ($item['kelompok'] !== $kelompok) : ?>
+                                        <li class="dapur-samping-judul<?= $kelompok === null ? '' : ' mt-3' ?>"><?= $this->escapeHtml($item['kelompok']) ?></li>
+<?php $kelompok = $item['kelompok'] ?>
+<?php endif ?>
 <?php $aktif = $item['rute'] === $this->ruteAktif ?>
                                         <li class="nav-item">
                                             <a class="nav-link<?= $aktif ? ' active' : '' ?>" href="<?= $this->escapeHtmlAttr($this->url($item['rute'])) ?>"<?= $aktif ? ' aria-current="page"' : '' ?>>
@@ -49,14 +54,14 @@
 <?php endif ?>
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end dashboard-notifikasi">
-                                    <li><h6 class="dropdown-header d-flex justify-content-between"><span><i class="bi bi-bug me-1"></i>Pesan Error</span><?php if ($n['jumlah'] > 0) : ?><span class="text-danger"><?= $this->escapeHtml($angka) ?> baru</span><?php endif ?></h6></li>
+                                    <li><h6 class="dropdown-header d-flex justify-content-between"><span><i class="bi bi-bug me-1"></i>Pesan Error</span><?php if ($n['jumlah'] > 0) : ?><span class="text-danger"><?= $this->escapeHtml($angka) ?> belum dibaca</span><?php endif ?></h6></li>
 <?php if ($n['terbaru'] === []) : ?>
                                     <li><span class="dropdown-item-text small text-body-secondary">Belum ada error yang tercatat.</span></li>
 <?php endif ?>
 <?php foreach ($n['terbaru'] as $e) : ?>
                                     <li>
                                         <a class="dropdown-item small<?= $e['baru'] ? ' dashboard-notifikasi-baru' : '' ?>" href="<?= $this->escapeHtmlAttr($n['alamat'] . '?kode=' . rawurlencode((string) ($e['kode'] ?? ''))) ?>">
-                                            <div class="d-flex justify-content-between gap-3 text-body-secondary"><span><?php if ($e['baru']) : ?><span class="badge text-bg-danger me-1">baru</span><?php endif ?><?= $this->escapeHtml($e['waktuSetempat']) ?></span><code><?= $this->escapeHtml((string) ($e['kode'] ?? '')) ?></code></div>
+                                            <div class="d-flex justify-content-between gap-3 text-body-secondary"><span><?php if ($e['baru']) : ?><span class="badge text-bg-danger me-1">belum dibaca</span><?php endif ?><?= $this->escapeHtml($e['waktuSetempat']) ?></span><code><?= $this->escapeHtml((string) ($e['kode'] ?? '')) ?></code></div>
                                             <div class="text-truncate<?= $e['baru'] ? ' fw-semibold' : '' ?>"><?= $this->escapeHtml((string) ($e['host'] ?? '') . ($e['alamat'] ?? '')) ?></div>
                                             <div class="text-truncate text-body-secondary"><?= $this->escapeHtml((string) ($e['pesan'] ?? '')) ?></div>
                                         </a>
@@ -73,6 +78,7 @@
     'user'         => $this->user,
     'alamatKeluar' => $this->alamatKeluar,
     'alamatProfil' => $this->alamatProfil ?? null,
+    'alamatPengaturan' => $this->alamatPengaturan ?? null,
     'tokenCsrf'    => $this->tokenCsrf,
     'fieldCsrf'    => $this->fieldCsrf,
 ]) ?>
