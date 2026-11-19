@@ -7,7 +7,7 @@ Dapur, atau sebagai dashboard milik satu website.
 ## Kebutuhan
 
 - Dapur AdeMS 2.9 atau lebih baru (layout dengan menu samping dan placeholder `menu-alat`, log error)
-- [adems/dapur-user](https://github.com/AdeMS/dapur-user) 2.1 (ikut terpasang otomatis, bersama
+- [adems/dapur-user](https://github.com/AdeMS/dapur-user) 2.2 (ikut terpasang otomatis, bersama
   [adems/dapur-email](https://github.com/AdeMS/dapur-email))
 - MariaDB atau MySQL yang sudah diatur di `config/autoload/database.local.php` (SQLite juga bisa dipakai)
 - [adems/dapur-multiwebsite](https://github.com/AdeMS/dapur-multiwebsite) 1.1 atau lebih baru, untuk halaman
@@ -20,7 +20,7 @@ Tulis paketnya di `composer.local.json`, lalu jalankan `composer update`:
 ```json
 {
     "require": {
-        "adems/dapur-dashboard": "^2.4"
+        "adems/dapur-dashboard": "^2.5"
     }
 }
 ```
@@ -192,10 +192,27 @@ return [
 Website bisa memakai database sendiri lewat `config/autoload/*.local.php` miliknya. Untuk dashboard yang sama
 sekali berbeda, buat modul sendiri di folder `module/` website tanpa paket ini.
 
+## Memperbarui dari 2.4
+
+Dashboard 2.5 memakai adems/dapur-user 2.2: satu akun bisa punya beberapa email, dan website bisa mewajibkan email
+domain tertentu (misalnya email kantor). Halaman Pengaturan & Privasi kini punya bagian **Email saya** dan pilihan
+**email untuk website ini**. Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.5"`, lalu jalankan dari
+folder inti:
+
+```bash
+composer update
+vendor/bin/dapur-user pasang
+```
+
+lalu hapus cache konfigurasi. `pasang` membuat tabel `user_email` dan menambah kolom `user_akses.email_id`.
+Pengaturan batasan domain dijelaskan di [README dapur-user](https://github.com/AdeMS/dapur-user#batasan-domain-email).
+
 ## Memperbarui dari 2.3
 
+Langkah dari 2.4 di atas juga berlaku. Perubahan dari 2.3 ke 2.4:
+
 Dashboard 2.4 memakai adems/dapur-user 2.1, yang menambah undangan, lupa kata sandi, dan ganti email lewat email.
-Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.4"`, lalu jalankan dari folder inti:
+Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.5"`, lalu jalankan dari folder inti:
 
 ```bash
 composer update
@@ -215,7 +232,7 @@ tautan lama `/profil?tab=...` dialihkan ke sana. Halaman dashboard tampil paling
 Langkah dari 2.3 di atas juga berlaku (satu kali `composer update` dan `pasang` cukup). Perubahan dari 2.2 ke 2.3:
 
 Dashboard 2.3 memakai adems/dapur-user 2.0, yang mengganti peran `admin` dengan admin super dan admin web. Ubah
-`composer.local.json` menjadi `"adems/dapur-dashboard": "^2.4"`, lalu jalankan dari folder inti:
+`composer.local.json` menjadi `"adems/dapur-dashboard": "^2.5"`, lalu jalankan dari folder inti:
 
 ```bash
 composer update
@@ -255,7 +272,7 @@ Ikuti langkah dari 2.2 dan 2.1 di atas.
 Login, user, dan perintahnya pindah ke paket [adems/dapur-user](https://github.com/AdeMS/dapur-user), yang
 ikut terpasang otomatis.
 
-1. Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.4"`, lalu jalankan `composer update`.
+1. Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.5"`, lalu jalankan `composer update`.
 2. Versi 1.x selalu memakai tabel `adems_user`, `adems_user_akses`, dan `adems_percobaan_masuk`. Untuk tetap
    memakai tabel itu, atur awalan `adems_` di `config/autoload/*.php` milik inti:
 
