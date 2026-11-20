@@ -53,6 +53,7 @@ final class PabrikLayanan
                 $c->get(Tampilan::class),
                 'dashboard::user',
                 $c->get(Pengaturan::class)->utama,
+                self::websiteTerdaftar($c),
             ),
             ConfigProvider::LUPA_SANDI => PabrikUser::lupaSandi($c, self::pintu($c)),
             ConfigProvider::ATUR_SANDI => PabrikUser::aturSandi($c, self::pintu($c)),
@@ -87,6 +88,20 @@ final class PabrikLayanan
             : null;
 
         return $semua === null ? [$inti] : array_values(array_filter($semua, 'is_string'));
+    }
+
+    /**
+     * Website yang aksesnya bisa diatur admin super dari halaman User dashboard utama; null di dashboard website
+     * atau bila adems/dapur-multiwebsite tidak terpasang.
+     */
+    private static function websiteTerdaftar(ContainerInterface $c): ?WebsiteTerdaftar
+    {
+        $inti = Konteks::folderInti();
+        if (! $c->get(Pengaturan::class)->utama || ! WebsiteTerdaftar::tersedia($inti)) {
+            return null;
+        }
+
+        return new WebsiteTerdaftar($inti, $c->get(PengaturanUser::class)->domainEmail);
     }
 
     /** Pintu login dashboard: lingkup 'dashboard' di inti, atau nama domain di website. */
