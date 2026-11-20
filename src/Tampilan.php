@@ -58,6 +58,7 @@ final class Tampilan implements PenyajiHalaman
             'menu'         => $this->menu($request->getAttribute(WajibMasukMiddleware::ATRIBUT_PERAN)),
             'ruteAktif'    => $request->getAttribute(RouteResult::class)?->getMatchedRouteName() ?: null,
             'user'         => $user,
+            'emailTampil'  => $request->getAttribute(WajibMasukMiddleware::ATRIBUT_EMAIL),
             'alamatKeluar' => $this->pengaturan->rute('/keluar'),
             'alamatProfil' => $this->pengaturan->rute('/profil'),
             'alamatPengaturan' => $this->pengaturan->rute('/pengaturan'),
