@@ -9,6 +9,7 @@ $this->headTitle('Profil');
 ?>
 <?= $this->partial('user::profil-isi', [
     'user'         => $this->user,
+    'emailTampil'  => $this->emailTampil ?? null,
     'pesan'        => $this->pesan,
     'galat'        => $this->galat,
     'peran'        => $this->peran,
