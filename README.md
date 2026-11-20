@@ -196,7 +196,7 @@ sekali berbeda, buat modul sendiri di folder `module/` website tanpa paket ini.
 
 Dashboard 2.5 memakai adems/dapur-user 2.2: satu akun bisa punya beberapa email, dan website bisa mewajibkan email
 domain tertentu (misalnya email kantor). Halaman Pengaturan & Privasi kini punya bagian **Email saya** dan pilihan
-**email untuk website ini**. Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.5"`, lalu jalankan dari
+**email untuk website ini**, dan halaman User di dashboard utama menampilkan **semua akun** kepada admin super, dengan aktivitas terakhir di tab tersendiri; admin super juga bisa memberi, mengubah, dan mencabut akses **website** dari sana (website terdaftar di adems/dapur-multiwebsite, dengan batasan domain email website itu). Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.5"`, lalu jalankan dari
 folder inti:
 
 ```bash
