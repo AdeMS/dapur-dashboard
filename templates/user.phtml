@@ -25,6 +25,13 @@ $this->headTitle('User');
     'formNama'      => $this->formNama,
     'formPeran'     => $this->formPeran,
     'pakaiUndangan' => $this->pakaiUndangan,
+    'semuaAkun'     => $this->semuaAkun ?? null,
+    'tampil'        => $this->tampil ?? 'akses',
+    'cari'          => $this->cari ?? '',
+    'jumlahSemua'   => $this->jumlahSemua ?? 0,
+    'websiteTersedia' => $this->websiteTersedia ?? [],
+    'peranWebsite'  => $this->peranWebsite ?? ['admin_web' => 'Admin Web', 'anggota' => 'Anggota'],
+    'formLingkup'   => $this->formLingkup ?? $this->lingkup,
     'tokenCsrf'     => $this->tokenCsrf,
     'fieldCsrf'     => $this->fieldCsrf,
 ]) ?>
