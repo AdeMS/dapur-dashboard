@@ -76,6 +76,7 @@
 <?php if ($this->user) : ?>
 <?= $this->partial('user::menu-user', [
     'user'         => $this->user,
+    'emailTampil'  => $this->emailTampil ?? null,
     'alamatKeluar' => $this->alamatKeluar,
     'alamatProfil' => $this->alamatProfil ?? null,
     'alamatPengaturan' => $this->alamatPengaturan ?? null,
