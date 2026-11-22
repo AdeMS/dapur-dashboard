@@ -25,6 +25,8 @@ final class ConfigProvider
     public const PROFIL      = 'dashboard.handler.profil';
     public const PENGATURAN  = 'dashboard.handler.pengaturan';
     public const KELOLA_USER = 'dashboard.handler.user';
+    public const FOTO        = 'dashboard.handler.foto';
+    public const LOKASI      = 'dashboard.handler.lokasi';
 
     /** Halaman tautan email (tanpa login): lupa kata sandi, membuat kata sandi, dan konfirmasi email baru. */
     public const LUPA_SANDI       = 'dashboard.handler.lupa_sandi';
@@ -64,6 +66,8 @@ final class ConfigProvider
                     self::PROFIL,
                     self::PENGATURAN,
                     self::KELOLA_USER,
+                    self::FOTO,
+                    self::LOKASI,
                     self::LUPA_SANDI,
                     self::ATUR_SANDI,
                     self::VERIFIKASI_EMAIL,
