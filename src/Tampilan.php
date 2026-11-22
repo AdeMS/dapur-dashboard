@@ -59,6 +59,7 @@ final class Tampilan implements PenyajiHalaman
             'ruteAktif'    => $request->getAttribute(RouteResult::class)?->getMatchedRouteName() ?: null,
             'user'         => $user,
             'emailTampil'  => $request->getAttribute(WajibMasukMiddleware::ATRIBUT_EMAIL),
+            'identitas'    => $request->getAttribute(WajibMasukMiddleware::ATRIBUT_IDENTITAS),
             'alamatKeluar' => $this->pengaturan->rute('/keluar'),
             'alamatProfil' => $this->pengaturan->rute('/profil'),
             'alamatPengaturan' => $this->pengaturan->rute('/pengaturan'),
