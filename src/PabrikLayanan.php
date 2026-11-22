@@ -55,6 +55,8 @@ final class PabrikLayanan
                 $c->get(Pengaturan::class)->utama,
                 self::websiteTerdaftar($c),
             ),
+            ConfigProvider::FOTO => PabrikUser::foto($c, self::pintu($c)),
+            ConfigProvider::LOKASI => PabrikUser::lokasi($c),
             ConfigProvider::LUPA_SANDI => PabrikUser::lupaSandi($c, self::pintu($c)),
             ConfigProvider::ATUR_SANDI => PabrikUser::aturSandi($c, self::pintu($c)),
             ConfigProvider::VERIFIKASI_EMAIL => PabrikUser::verifikasiEmail($c, self::pintu($c)),
