@@ -32,6 +32,8 @@ final class RuteDelegator
         $app->route($atur->rute('/profil'), [...$masuk, ConfigProvider::PROFIL], ['GET', 'POST'], 'dashboard.profil');
         $app->route($atur->rute('/pengaturan'), [...$masuk, ConfigProvider::PENGATURAN], ['GET', 'POST'], 'dashboard.pengaturan');
         $app->route($atur->rute('/user'), [...$masuk, ConfigProvider::KELOLA_USER], ['GET', 'POST'], 'dashboard.user');
+        $app->get($atur->rute('/foto/{kode:[a-f0-9]{32}}'), [...$masuk, ConfigProvider::FOTO], 'dashboard.foto');
+        $app->get($atur->rute('/lokasi'), [...$masuk, ConfigProvider::LOKASI], 'dashboard.lokasi');
         $app->route($atur->rute('/error'), [...$masuk, PesanErrorHandler::class], ['GET', 'POST'], 'dashboard.error');
 
         if ($atur->utama) {
