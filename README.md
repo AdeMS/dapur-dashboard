@@ -80,8 +80,10 @@ Setiap dashboard punya dua halaman milik user dari paket user, dengan tautan di 
 
 | Dashboard utama | Dashboard website        | Isi                                                             |
 |-----------------|--------------------------|-----------------------------------------------------------------|
-| `/profil`       | `/dashboard/profil`      | kartu user (hanya dibaca)                                       |
-| `/pengaturan`   | `/dashboard/pengaturan`  | Pengaturan & Privasi: Akun Saya (nama, email, kata sandi), Aktivitas, Riwayat masuk |
+| `/profil`       | `/dashboard/profil`      | kartu user dan Tentang (hanya dibaca); `?id=<nomor>` untuk profil rekan |
+| `/pengaturan`   | `/dashboard/pengaturan`  | Pengaturan & Privasi: Akun Saya (foto, nama, email, kata sandi, Tentang, profil di website ini), Aktivitas, Riwayat masuk |
+| `/foto/<kode>`  | `/dashboard/foto/<kode>` | foto profil, hanya untuk user yang login dan berbagi lingkup     |
+| `/lokasi`       | `/dashboard/lokasi`      | saran kota untuk isian Lokasi (JSON), hanya untuk user yang login; 404 bila tidak diatur |
 
 Keduanya tampil dengan menu dashboard; isinya dijelaskan di
 [README dapur-user](https://github.com/AdeMS/dapur-user#profil).
@@ -191,6 +193,24 @@ return [
 
 Website bisa memakai database sendiri lewat `config/autoload/*.local.php` miliknya. Untuk dashboard yang sama
 sekali berbeda, buat modul sendiri di folder `module/` website tanpa paket ini.
+
+## Memperbarui dari 2.5
+
+Dashboard 2.6 memakai adems/dapur-user 2.3: profil dengan **foto**, nama depan/tengah/belakang, bagian **Tentang**
+yang bisa dilihat rekan, dan **profil di website ini** (nama dan foto khusus website itu). Nama di daftar user membuka
+profil rekan. Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.6"`, lalu jalankan dari folder inti:
+
+```bash
+composer update
+vendor/bin/dapur-user pasang
+```
+
+lalu hapus cache konfigurasi. `pasang` membuat tabel `user_profil` dan menambah kolom nama dan foto di tabel `user`.
+Foto disimpan di `data/upload/avatar` folder inti, yang harus bisa ditulis web server; caranya dijelaskan di
+[README dapur-user](https://github.com/AdeMS/dapur-user#memperbarui-dari-22-ke-23).
+
+Isian Lokasi bisa menampilkan saran kota dari tabel kota milik Anda (pilihan); pengaturannya dijelaskan di
+[README dapur-user](https://github.com/AdeMS/dapur-user#saran-kota-untuk-lokasi).
 
 ## Memperbarui dari 2.4
 
