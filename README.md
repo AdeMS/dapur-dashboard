@@ -194,6 +194,14 @@ return [
 Website bisa memakai database sendiri lewat `config/autoload/*.local.php` miliknya. Untuk dashboard yang sama
 sekali berbeda, buat modul sendiri di folder `module/` website tanpa paket ini.
 
+## Memperbarui dari 2.6
+
+Dashboard 2.7 memakai adems/dapur-user 2.4: di Pengaturan & Privasi > Akun Saya ada bagian **Gabungkan akun**, untuk
+menyatukan akun lain milik orang yang sama (lihat
+[README dapur-user](https://github.com/AdeMS/dapur-user#gabungkan-akun)). Tidak ada tabel baru. Ubah
+`composer.local.json` menjadi `"adems/dapur-dashboard": "^2.7"`, lalu jalankan `composer update` dari folder inti dan
+hapus cache konfigurasi.
+
 ## Memperbarui dari 2.5
 
 Dashboard 2.6 memakai adems/dapur-user 2.3: profil dengan **foto**, nama depan/tengah/belakang, bagian **Tentang**
