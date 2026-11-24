@@ -7,8 +7,11 @@ Dapur, atau sebagai dashboard milik satu website.
 ## Kebutuhan
 
 - Dapur AdeMS 2.9 atau lebih baru (layout dengan menu samping dan placeholder `menu-alat`, log error)
-- [adems/dapur-user](https://github.com/AdeMS/dapur-user) 2.2 (ikut terpasang otomatis, bersama
-  [adems/dapur-email](https://github.com/AdeMS/dapur-email))
+- [adems/dapur-user](https://github.com/AdeMS/dapur-user) 2.5 (ikut terpasang otomatis, bersama
+  [adems/dapur-email](https://github.com/AdeMS/dapur-email) dan
+  [adems/dapur-database](https://github.com/AdeMS/dapur-database))
+- Dapur AdeMS 2.10 atau lebih baru untuk perintah `php dapur pasang` (pada inti yang lebih lama, pakai
+  `vendor/bin/dapur-user pasang`)
 - MariaDB atau MySQL yang sudah diatur di `config/autoload/database.local.php` (SQLite juga bisa dipakai)
 - [adems/dapur-multiwebsite](https://github.com/AdeMS/dapur-multiwebsite) 1.1 atau lebih baru, untuk halaman
   daftar website dan dashboard per website; 1.2 agar dashboard utama membaca log error semua website
@@ -20,18 +23,18 @@ Tulis paketnya di `composer.local.json`, lalu jalankan `composer update`:
 ```json
 {
     "require": {
-        "adems/dapur-dashboard": "^2.5"
+        "adems/dapur-dashboard": "^2.8"
     }
 }
 ```
 
-Bila tabel user perlu awalan nama, atur `'user' => ['awalan_tabel' => ...]` lebih dulu (lihat
-[README dapur-user](https://github.com/AdeMS/dapur-user#pengaturan)). Lalu buat tabel dan admin pertama dari
-folder inti. Admin yang dibuat di inti menjadi admin super. Kata sandi diketik tanpa terlihat; minimal 12
-karakter untuk admin:
+Bila tabel perlu awalan nama, atur `'database' => ['awalan_tabel' => ...]` lebih dulu (lihat
+[README dapur-database](https://github.com/AdeMS/dapur-database#awalan-nama-tabel)). Lalu buat tabel dan admin
+pertama dari folder inti. Admin yang dibuat di inti menjadi admin super. Kata sandi diketik tanpa terlihat; minimal
+12 karakter untuk admin:
 
 ```bash
-vendor/bin/dapur-user pasang
+php dapur pasang
 vendor/bin/dapur-user buat-admin admin@contoh.com --nama="Nama Lengkap"
 ```
 
@@ -193,6 +196,24 @@ return [
 
 Website bisa memakai database sendiri lewat `config/autoload/*.local.php` miliknya. Untuk dashboard yang sama
 sekali berbeda, buat modul sendiri di folder `module/` website tanpa paket ini.
+
+## Memperbarui dari 2.7
+
+Dashboard 2.8 memakai adems/dapur-user 2.5, yang memasang tabelnya lewat paket baru
+[adems/dapur-database](https://github.com/AdeMS/dapur-database) (ikut terpasang otomatis). Ubah `composer.local.json`
+menjadi `"adems/dapur-dashboard": "^2.8"`, jalankan `composer update` dari folder inti, hapus cache konfigurasi, lalu
+jalankan sekali:
+
+```bash
+php dapur pasang
+```
+
+Untuk ini inti perlu Dapur AdeMS 2.10. Perintah itu hanya membuat tabel catatan `dapur_skema`; data tidak berubah.
+
+Halaman **Ringkasan** kini memeriksa database untuk admin super. Bila ada tabel, kolom, atau langkah data modul yang
+belum dipasang, tampil peringatan **Database perlu diperbarui** beserta perintah yang perlu dijalankan
+(`php dapur pasang`, atau `php dapur pasang --website=<domain>` di dashboard website). User lain tidak melihat
+peringatan ini, dan pemeriksaannya hanya dijalankan untuk admin super.
 
 ## Memperbarui dari 2.6
 
