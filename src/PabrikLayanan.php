@@ -7,6 +7,8 @@ namespace AdeMS\Dapur\Dashboard;
 use AdeMS\Dapur\Dashboard\Handler\PesanErrorHandler;
 use AdeMS\Dapur\Dashboard\Handler\RingkasanHandler;
 use AdeMS\Dapur\Dashboard\Handler\WebsiteHandler;
+use AdeMS\Dapur\Database\PabrikPemasang;
+use AdeMS\Dapur\Database\Pemasang;
 use AdeMS\Dapur\User\Konteks;
 use AdeMS\Dapur\User\PabrikLayanan as PabrikUser;
 use AdeMS\Dapur\User\Pengaturan as PengaturanUser;
@@ -60,7 +62,11 @@ final class PabrikLayanan
             ConfigProvider::LUPA_SANDI => PabrikUser::lupaSandi($c, self::pintu($c)),
             ConfigProvider::ATUR_SANDI => PabrikUser::aturSandi($c, self::pintu($c)),
             ConfigProvider::VERIFIKASI_EMAIL => PabrikUser::verifikasiEmail($c, self::pintu($c)),
-            RingkasanHandler::class => new RingkasanHandler($c->get(Tampilan::class)),
+            RingkasanHandler::class => new RingkasanHandler(
+                $c->get(Tampilan::class),
+                static fn (): Pemasang => PabrikPemasang::dariContainer($c),
+                'php dapur pasang' . (Konteks::websiteAktif() === null ? '' : ' --website=' . Konteks::websiteAktif()),
+            ),
             WebsiteHandler::class => new WebsiteHandler($c->get(Tampilan::class), Konteks::folderInti()),
             default => throw new RuntimeException("Layanan dashboard tidak dikenal: {$nama}"),
         };
