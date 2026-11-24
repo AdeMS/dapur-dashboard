@@ -3,7 +3,9 @@
  * Halaman ringkasan dashboard.
  *
  * @var AdeMS\Dapur\User\User $user
+ * @var array{perlu: bool, perintah: string, galat: ?string}|null $database  (admin super) keadaan tabel modul
  */
+$database = $this->database ?? null;
 $this->headTitle('Dashboard');
 ?>
 <div class="container py-4">
@@ -13,4 +15,18 @@ $this->headTitle('Dashboard');
             <p class="small text-body-secondary mb-0 mt-1">Halo, <?= $this->escapeHtml($this->user->nama) ?>.</p>
         </div>
     </div>
+<?php if ($database !== null && $database['perlu']) : ?>
+    <div class="alert alert-warning d-flex gap-3" role="status">
+        <i class="bi bi-database-exclamation fs-4" aria-hidden="true"></i>
+        <div>
+            <div class="fw-semibold">Database perlu diperbarui</div>
+<?php if ($database['galat'] !== null) : ?>
+            <p class="mb-2">Pemeriksaan tabel modul gagal: <?= $this->escapeHtml($database['galat']) ?></p>
+<?php else : ?>
+            <p class="mb-2">Ada tabel, kolom, atau langkah data modul yang belum dipasang. Beberapa fitur mungkin belum berjalan sampai database diperbarui.</p>
+<?php endif ?>
+            <p class="mb-0 small">Jalankan dari folder inti di server: <code><?= $this->escapeHtml($database['perintah']) ?></code></p>
+        </div>
+    </div>
+<?php endif ?>
 </div>
