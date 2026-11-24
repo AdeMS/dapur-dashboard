@@ -51,6 +51,8 @@ final class ConfigProvider
                     ['label' => 'User', 'rute' => 'dashboard.user', 'ikon' => 'people', 'peran' => 'admin', 'kelompok' => 'Pengaturan'],
                 ],
             ],
+            // Skema tabel user ikut terdaftar, agar `php dapur pasang` memasangnya (adems/dapur-database).
+            'dapur'        => $user['dapur'] ?? [],
             'templates'    => [
                 'paths' => $user['templates']['paths'] + [
                     'dashboard' => [dirname(__DIR__) . '/templates'],
