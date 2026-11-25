@@ -1,0 +1,666 @@
+<?php
+/**
+ * Halaman Aset (dashboard utama, admin super): daftar aset, atau satu aset beserta versi, versi per website,
+ * pengelola file, unggah bertahap, dan riwayat.
+ *
+ * @var string $tokenCsrf
+ * @var string $fieldCsrf
+ * @var bool $ditolak
+ * @var ?string $tidakAda
+ * @var string $mode 'daftar' atau 'aset'
+ * @var bool $belumSiap
+ * @var ?string $folderMasalah
+ * @var ?string $pesan
+ * @var ?string $galat
+ * @var \AdeMS\Dapur\Asset\Aset|null $aset
+ */
+use AdeMS\Dapur\Asset\Aset;
+
+$this->headTitle('Aset');
+$alamat = static fn (array $q): string => '?' . http_build_query(array_filter($q, static fn ($v): bool => $v !== null && $v !== ''));
+$csrf   = '<input type="hidden" name="' . $this->escapeHtmlAttr($this->fieldCsrf) . '" value="' . $this->escapeHtmlAttr($this->tokenCsrf) . '">';
+$sumberBadge = [
+    Aset::SUMBER_COMPOSER => ['Composer', 'text-bg-info'],
+    Aset::SUMBER_FILE     => ['File konfigurasi', 'text-bg-secondary'],
+    Aset::SUMBER_DATABASE => ['Dashboard', 'text-bg-success'],
+];
+?>
+<style>
+    .aset-file td { vertical-align: middle; }
+    .aset-file .aset-nama { word-break: break-all; }
+    .aset-tarik { border: 2px dashed var(--bs-border-color); border-radius: .5rem; }
+    .aset-tarik.aset-tarik-aktif { border-color: var(--bs-success); background: rgba(111, 207, 151, .1); }
+</style>
+<div class="container py-4">
+    <div class="card mb-4">
+        <div class="card-body py-3">
+<?php if ($this->mode === 'aset' && $this->aset) : ?>
+            <div class="small mb-1"><a href="?"><i class="bi bi-arrow-left me-1"></i>Semua aset</a></div>
+            <h1 class="h4 mb-0"><i class="bi bi-box-seam me-2"></i><?= $this->escapeHtml($this->aset->nama) ?></h1>
+            <div class="small text-body-secondary mt-1">
+                <span class="badge <?= $sumberBadge[$this->aset->sumber][1] ?>"><?= $this->escapeHtml($sumberBadge[$this->aset->sumber][0]) ?></span>
+                <span class="badge <?= $this->aset->akses === Aset::LOGIN ? 'text-bg-warning' : 'text-bg-light border' ?>"><?= $this->aset->akses === Aset::LOGIN ? 'Wajib login' : 'Publik' ?></span>
+<?php if (! $this->aset->aktif) : ?>
+                <span class="badge text-bg-danger">Nonaktif</span>
+<?php endif ?>
+                <?= $this->escapeHtml($this->aset->keterangan) ?>
+            </div>
+<?php else : ?>
+            <h1 class="h4 mb-0">Aset</h1>
+            <div class="small text-body-secondary">File CSS, JavaScript, gambar, font, dan dokumen yang dilayani di <code>/asset/&lt;vendor&gt;/&lt;aplikasi&gt;/</code>.</div>
+<?php endif ?>
+        </div>
+    </div>
+
+<?php if ($this->ditolak) : ?>
+    <div class="alert alert-warning">Halaman ini hanya untuk admin super.</div>
+</div>
+<?php return; endif ?>
+
+<?php if ($this->pesan) : ?>
+    <div class="alert alert-success alert-dismissible fade show user-pesan-sementara" role="status"><?= $this->escapeHtml($this->pesan) ?><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button></div>
+<?php endif ?>
+<?php if ($this->galat) : ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert"><?= $this->escapeHtml($this->galat) ?><button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Tutup"></button></div>
+<?php endif ?>
+<?php if ($this->belumSiap) : ?>
+    <div class="alert alert-warning">Tabel aset belum dibuat, jadi aset dari dashboard belum bisa dikelola. Jalankan <code>php dapur pasang</code> dari folder inti Dapur.</div>
+<?php endif ?>
+<?php if ($this->folderMasalah) : ?>
+    <div class="alert alert-warning"><?= $this->escapeHtml($this->folderMasalah) ?></div>
+<?php endif ?>
+<?php if ($this->tidakAda) : ?>
+    <div class="alert alert-warning">Aset <?= $this->escapeHtml($this->tidakAda) ?> tidak ditemukan. <a href="?">Kembali ke daftar aset</a>.</div>
+</div>
+<?php return; endif ?>
+
+<?php if ($this->mode === 'daftar') : ?>
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="d-flex gap-2 mb-3" role="search">
+                <input class="form-control" type="search" name="cari" maxlength="100" value="<?= $this->escapeHtmlAttr($this->cari) ?>" placeholder="Cari aset (nama, keterangan, paket)" aria-label="Cari aset">
+                <button class="btn btn-outline-success text-nowrap"><i class="bi bi-search"></i><span class="d-none d-md-inline ms-1">Cari</span></button>
+            </form>
+<?php if ($this->cari !== '') : ?>
+            <p class="small text-body-secondary"><?= count($this->semuaAset) ?> dari <?= (int) $this->jumlahAset ?> aset cocok dengan "<?= $this->escapeHtml($this->cari) ?>". <a href="?">Hapus pencarian</a></p>
+<?php endif ?>
+<?php if (! $this->semuaAset) : ?>
+            <p class="text-body-secondary mb-0"><?= $this->cari !== '' ? 'Tidak ada aset yang cocok.' : 'Belum ada aset.' ?></p>
+<?php else : ?>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>Aset</th><th>Sumber</th><th>Akses</th><th>Versi dipakai</th><th>Status</th></tr></thead>
+                    <tbody>
+<?php foreach ($this->semuaAset as $a) : ?>
+                        <tr>
+                            <td>
+                                <a href="<?= $this->escapeHtmlAttr($alamat(['nama' => $a['nama']])) ?>" class="fw-semibold"><?= $this->escapeHtml($a['nama']) ?></a>
+<?php if ($a['keterangan'] !== '') : ?>
+                                <div class="small text-body-secondary"><?= $this->escapeHtml($a['keterangan']) ?></div>
+<?php endif ?>
+                            </td>
+                            <td><span class="badge <?= $sumberBadge[$a['sumber']][1] ?>" title="<?= $this->escapeHtmlAttr($a['sumberTeks']) ?>"><?= $this->escapeHtml($sumberBadge[$a['sumber']][0]) ?></span></td>
+                            <td><?= $a['akses'] === Aset::LOGIN ? '<span class="badge text-bg-warning">Wajib login</span>' : 'Publik' ?></td>
+                            <td>
+<?php if (! $a['berversi']) : ?>
+                                <span class="text-body-secondary">tanpa versi</span>
+<?php elseif ($a['versi'] === null) : ?>
+                                <span class="text-body-secondary">belum ada versi terbit</span>
+<?php else : ?>
+                                <code><?= $this->escapeHtml($a['versi']) ?></code>
+<?php if ($a['jumlahVersi'] > 1) : ?>
+                                <span class="small text-body-secondary">(<?= (int) $a['jumlahVersi'] ?> versi)</span>
+<?php endif ?>
+<?php endif ?>
+                            </td>
+                            <td><?= $a['aktif'] ? '<span class="badge text-bg-success">Aktif</span>' : '<span class="badge text-bg-danger">Nonaktif</span>' ?></td>
+                        </tr>
+<?php endforeach ?>
+                    </tbody>
+                </table>
+            </div>
+<?php endif ?>
+        </div>
+    </div>
+
+<?php if (! $this->belumSiap) : ?>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5">Tambah aset</h2>
+            <form method="post" class="row g-3" autocomplete="off">
+                <?= $csrf ?>
+                <input type="hidden" name="aksi" value="tambah">
+                <div class="col-md-4">
+                    <label class="form-label" for="aset-nama">Nama</label>
+                    <input class="form-control" id="aset-nama" name="nama_baru" required maxlength="101" pattern="[a-z0-9][a-z0-9._\-]{0,49}/[a-z0-9][a-z0-9._\-]{0,49}" placeholder="vendor/aplikasi">
+                    <div class="form-text">Huruf kecil, mis. <code>adems/uang</code>. Alamatnya: <code>/asset/adems/uang/...</code></div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="aset-jenis">Jenis</label>
+                    <select class="form-select" id="aset-jenis" name="berversi">
+                        <option value="1">Berversi (mis. pustaka CSS/JS)</option>
+                        <option value="0">Tanpa versi (mis. gambar, dokumen)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="aset-akses">Akses</label>
+                    <select class="form-select" id="aset-akses" name="akses">
+                        <option value="publik">Publik</option>
+                        <option value="login">Wajib login</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="aset-ket">Keterangan</label>
+                    <input class="form-control" id="aset-ket" name="keterangan" maxlength="255">
+                </div>
+                <div class="col-12">
+                    <button class="btn btn-success fw-semibold"><i class="bi bi-plus-lg me-1"></i>Tambah aset</button>
+                </div>
+            </form>
+        </div>
+    </div>
+<?php endif ?>
+    <p class="small text-body-secondary">Aset dari <strong>Composer</strong> (mis. Bootstrap) dan dari <strong>file konfigurasi</strong> terkunci; aset Composer tetap bisa diberi versi tambahan. Di template, pakai <code>$this-&gt;aset('vendor/aplikasi', 'css/file.css')</code> agar alamatnya mengikuti versi website.</p>
+</div>
+<?php return; endif ?>
+
+<?php
+// ---------------------------------------------------------------- Satu aset
+$a        = $this->aset;
+$terkunci = $a->terkunci();
+?>
+<?php if (! $terkunci && ! $this->belumSiap) : ?>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5">Pengaturan</h2>
+            <form method="post" class="row g-3 align-items-end" autocomplete="off">
+                <?= $csrf ?>
+                <input type="hidden" name="aksi" value="ubah">
+                <input type="hidden" name="nama" value="<?= $this->escapeHtmlAttr($a->nama) ?>">
+                <div class="col-md-3">
+                    <label class="form-label" for="aset-akses">Akses</label>
+                    <select class="form-select" id="aset-akses" name="akses">
+                        <option value="publik"<?= $a->akses === Aset::PUBLIK ? ' selected' : '' ?>>Publik</option>
+                        <option value="login"<?= $a->akses === Aset::LOGIN ? ' selected' : '' ?>>Wajib login</option>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label" for="aset-ket">Keterangan</label>
+                    <input class="form-control" id="aset-ket" name="keterangan" maxlength="255" value="<?= $this->escapeHtmlAttr($a->keterangan) ?>">
+                </div>
+                <div class="col-md-2">
+                    <div class="form-check">
+                        <input type="hidden" name="aktif" value="0">
+                        <input class="form-check-input" type="checkbox" name="aktif" value="1" id="aset-aktif"<?= $a->aktif ? ' checked' : '' ?>>
+                        <label class="form-check-label" for="aset-aktif">Aktif</label>
+                    </div>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button class="btn btn-success fw-semibold">Simpan</button>
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#asetHapus" title="Hapus aset"><i class="bi bi-trash"></i></button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="modal fade" id="asetHapus" tabindex="-1" aria-labelledby="asetHapusJudul" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form method="post" class="modal-content" autocomplete="off">
+                <?= $csrf ?>
+                <input type="hidden" name="aksi" value="hapus">
+                <input type="hidden" name="nama" value="<?= $this->escapeHtmlAttr($a->nama) ?>">
+                <div class="modal-header"><h2 class="modal-title h5" id="asetHapusJudul">Hapus Aset</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button></div>
+                <div class="modal-body">
+                    <p>Aset <strong><?= $this->escapeHtml($a->nama) ?></strong> beserta <strong>semua versi dan filenya</strong> akan dihapus. Halaman yang masih memakainya akan kehilangan file tersebut.</p>
+                    <label class="form-label" for="aset-konfirmasi">Ketik <code><?= $this->escapeHtml($a->nama) ?></code> untuk menghapus</label>
+                    <input class="form-control" id="aset-konfirmasi" name="konfirmasi" required>
+                </div>
+                <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button><button class="btn btn-danger fw-semibold">Hapus</button></div>
+            </form>
+        </div>
+    </div>
+<?php elseif ($terkunci) : ?>
+    <div class="alert alert-secondary small"><i class="bi bi-lock me-1"></i>Aset ini dari <?= $this->escapeHtml($this->sumberTeks) ?>, jadi pengaturannya terkunci.<?= $a->bisaTambahVersi() ? ' Versi tambahan tetap bisa dibuat dan diunggah di bawah.' : '' ?></div>
+<?php endif ?>
+
+<?php if ($a->berversi) : ?>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5">Versi</h2>
+<?php if (! $this->versiBaris) : ?>
+            <p class="text-body-secondary">Belum ada versi.</p>
+<?php else : ?>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead><tr><th>Versi</th><th>Status</th><th>Isi</th><th>Dipakai</th><th class="text-end">Tindakan</th></tr></thead>
+                    <tbody>
+<?php foreach ($this->versiBaris as $v) : ?>
+                        <tr<?= $v['versi'] === $this->versiDipilih ? ' class="table-active"' : '' ?>>
+                            <td>
+                                <a href="<?= $this->escapeHtmlAttr($alamat(['nama' => $a->nama, 'versi' => $v['versi']]) . '#file') ?>"><code><?= $this->escapeHtml($v['versi']) ?></code></a>
+<?php if ($v['sumber'] === Aset::SUMBER_COMPOSER) : ?>
+                                <span class="badge text-bg-info">Composer</span>
+<?php endif ?>
+                            </td>
+                            <td>
+<?php if ($v['terbit']) : ?>
+                                <span class="badge text-bg-success"><i class="bi bi-lock me-1"></i>Terbit</span>
+<?php else : ?>
+                                <span class="badge text-bg-warning">Draf</span>
+<?php endif ?>
+                            </td>
+                            <td class="small"><?= (int) $v['ringkasan']['jumlah'] ?> file, <?= $this->escapeHtml(\AdeMS\Dapur\Asset\Penyimpanan::ukuranTeks($v['ringkasan']['ukuran'])) ?></td>
+                            <td class="small">
+<?php if ($v['bawaan']) : ?>
+                                <span class="badge text-bg-primary">Bawaan</span>
+<?php endif ?>
+                                <?= $this->escapeHtml(implode(', ', $v['dipakai'])) ?>
+                            </td>
+                            <td class="text-end text-nowrap">
+<?php if ($v['bisaUbah']) : ?>
+                                <form method="post" class="d-inline"><?= $csrf ?><input type="hidden" name="aksi" value="terbitkan"><input type="hidden" name="nama" value="<?= $this->escapeHtmlAttr($a->nama) ?>"><input type="hidden" name="versi" value="<?= $this->escapeHtmlAttr($v['versi']) ?>">
+                                    <button class="btn btn-sm btn-success" data-judul="Terbitkan Versi" data-tombol="Terbitkan" data-konfirmasi="<?= $this->escapeHtmlAttr('Sesudah terbit, isinya tidak bisa diubah kembali.<br>Apakah Anda ingin menerbitkan <b>' . $this->escapeHtml($a->nama) . '</b> versi <b>' . $this->escapeHtml($v['versi']) . '</b>?') ?>"><i class="bi bi-send me-1"></i>Terbitkan</button></form>
+                                <form method="post" class="d-inline"><?= $csrf ?><input type="hidden" name="aksi" value="hapus_versi"><input type="hidden" name="nama" value="<?= $this->escapeHtmlAttr($a->nama) ?>"><input type="hidden" name="versi" value="<?= $this->escapeHtmlAttr($v['versi']) ?>">
+                                    <button class="btn btn-sm btn-outline-danger" title="Hapus versi" data-judul="Hapus Versi" data-tombol="Hapus" data-bahaya="1" data-konfirmasi="<?= $this->escapeHtmlAttr('Versi <b>' . $this->escapeHtml($v['versi']) . '</b> beserta semua filenya akan dihapus. Lanjutkan?') ?>"><i class="bi bi-trash"></i></button></form>
+<?php elseif ($v['terbit'] && ! $v['bawaan'] && $a->sumber !== Aset::SUMBER_FILE) : ?>
+                                <form method="post" class="d-inline"><?= $csrf ?><input type="hidden" name="aksi" value="versi_bawaan"><input type="hidden" name="nama" value="<?= $this->escapeHtmlAttr($a->nama) ?>"><input type="hidden" name="versi" value="<?= $this->escapeHtmlAttr($v['versi']) ?>">
+                                    <button class="btn btn-sm btn-outline-primary">Jadikan bawaan</button></form>
+<?php endif ?>
+                            </td>
+                        </tr>
+<?php endforeach ?>
+                    </tbody>
+                </table>
+            </div>
+            <p class="small text-body-secondary">Versi yang dipakai website: pilihan website, lalu versi <strong>bawaan</strong>, lalu versi terbit yang terbaru. Versi draf tidak pernah dilayani.</p>
+<?php endif ?>
+<?php if ($a->bisaTambahVersi() && ! $this->belumSiap) : ?>
+            <form method="post" class="row g-2 align-items-end" autocomplete="off">
+                <?= $csrf ?>
+                <input type="hidden" name="aksi" value="versi_baru">
+                <input type="hidden" name="nama" value="<?= $this->escapeHtmlAttr($a->nama) ?>">
+                <div class="col-sm-4 col-md-3">
+                    <label class="form-label" for="versi-baru">Versi baru</label>
+                    <input class="form-control" id="versi-baru" name="versi_baru" required maxlength="40" placeholder="mis. 1.0.0">
+                </div>
+                <div class="col-sm-4 col-md-3">
+                    <label class="form-label" for="versi-salin">Isi awal</label>
+                    <select class="form-select" id="versi-salin" name="salin_dari">
+                        <option value="">Kosong</option>
+<?php foreach ($this->versiBaris as $v) : ?>
+                        <option value="<?= $this->escapeHtmlAttr($v['versi']) ?>">Salin dari <?= $this->escapeHtml($v['versi']) ?></option>
+<?php endforeach ?>
+                    </select>
+                </div>
+                <div class="col-auto"><button class="btn btn-success fw-semibold"><i class="bi bi-plus-lg me-1"></i>Buat versi</button></div>
+            </form>
+<?php endif ?>
+        </div>
+    </div>
+
+<?php if ($this->website && $this->versiTerbit) : ?>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5">Versi per website</h2>
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead><tr><th>Website</th><th>Dipakai</th><th>Pilihan</th></tr></thead>
+                    <tbody>
+<?php foreach ($this->website as $w) : ?>
+                        <tr>
+                            <td><?= $w['lingkup'] === 'dashboard' ? 'Dashboard utama' : $this->escapeHtml($w['lingkup']) ?></td>
+                            <td>
+                                <code><?= $this->escapeHtml($w['dipakai'] ?? '-') ?></code>
+<?php if ($w['peringatan']) : ?>
+                                <span class="badge text-bg-warning" title="Versi mayor berbeda dari versi bawaan. Tampilan Dapur dibuat untuk versi bawaan, jadi halaman bisa berantakan."><i class="bi bi-exclamation-triangle me-1"></i>Versi mayor berbeda</span>
+<?php endif ?>
+                            </td>
+                            <td>
+                                <form method="post" class="d-flex gap-2">
+                                    <?= $csrf ?>
+                                    <input type="hidden" name="aksi" value="pilih_versi">
+                                    <input type="hidden" name="nama" value="<?= $this->escapeHtmlAttr($a->nama) ?>">
+                                    <input type="hidden" name="lingkup" value="<?= $this->escapeHtmlAttr($w['lingkup']) ?>">
+                                    <select class="form-select form-select-sm w-auto" name="versi_website" aria-label="Versi untuk <?= $this->escapeHtmlAttr($w['lingkup']) ?>">
+                                        <option value="">Ikut versi bawaan</option>
+<?php foreach ($this->versiTerbit as $v) : ?>
+                                        <option value="<?= $this->escapeHtmlAttr($v) ?>"<?= $w['pilihan'] === $v ? ' selected' : '' ?>><?= $this->escapeHtml($v) ?></option>
+<?php endforeach ?>
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-success">Simpan</button>
+                                </form>
+                            </td>
+                        </tr>
+<?php endforeach ?>
+                    </tbody>
+                </table>
+            </div>
+            <p class="small text-body-secondary mt-2 mb-0">Pilihan di file konfigurasi website (<code>'asset' =&gt; ['versi' =&gt; [...]]</code>) menang atas pilihan di sini.</p>
+        </div>
+    </div>
+<?php endif ?>
+<?php endif ?>
+
+<?php
+// ---------------------------------------------------------------- File
+$adaIsi = ! $a->berversi || $this->versiDipilih !== null;
+$jejak  = $this->folder === '' ? [] : explode('/', $this->folder);
+$dasarQ = ['nama' => $a->nama, 'versi' => $this->versiDipilih];
+?>
+<?php if ($adaIsi) : ?>
+    <div class="card mb-4" id="file">
+        <div class="card-body">
+            <h2 class="h5">File<?= $a->berversi ? ' versi <code>' . $this->escapeHtml($this->versiDipilih) . '</code>' : '' ?>
+<?php if (! $this->bisaUbahIsi) : ?>
+                <span class="badge text-bg-secondary ms-1"><i class="bi bi-lock me-1"></i>hanya baca</span>
+<?php endif ?>
+            </h2>
+            <nav aria-label="Folder" class="small mb-2">
+                <a href="<?= $this->escapeHtmlAttr($alamat($dasarQ) . '#file') ?>"><i class="bi bi-house-door"></i></a>
+<?php $jalan = ''; foreach ($jejak as $bagian) : $jalan = ltrim($jalan . '/' . $bagian, '/'); ?>
+                / <a href="<?= $this->escapeHtmlAttr($alamat($dasarQ + ['folder' => $jalan]) . '#file') ?>"><?= $this->escapeHtml($bagian) ?></a>
+<?php endforeach ?>
+            </nav>
+<?php if ($this->galatIsi) : ?>
+            <div class="alert alert-warning small"><?= $this->escapeHtml($this->galatIsi) ?></div>
+<?php endif ?>
+<?php if (! $this->isi) : ?>
+            <p class="text-body-secondary">Folder ini kosong.</p>
+<?php else : ?>
+            <div class="table-responsive">
+                <table class="table table-sm aset-file">
+                    <thead><tr><th>Nama</th><th class="text-end">Ukuran</th><th class="d-none d-md-table-cell">Diubah</th><th></th></tr></thead>
+                    <tbody>
+<?php foreach ($this->isi as $f) : ?>
+                        <tr>
+                            <td class="aset-nama">
+<?php if ($f['folder']) : ?>
+                                <i class="bi bi-folder-fill text-warning me-1"></i><a href="<?= $this->escapeHtmlAttr($alamat($dasarQ + ['folder' => $f['jalur']]) . '#file') ?>"><?= $this->escapeHtml($f['nama']) ?></a>
+<?php elseif ($f['url']) : ?>
+                                <i class="bi bi-file-earmark me-1"></i><a href="<?= $this->escapeHtmlAttr($f['url']) ?>" target="_blank" rel="noopener"><?= $this->escapeHtml($f['nama']) ?></a>
+<?php else : ?>
+                                <i class="bi bi-file-earmark me-1"></i><?= $this->escapeHtml($f['nama']) ?>
+<?php endif ?>
+                            </td>
+                            <td class="text-end small text-nowrap"><?= $this->escapeHtml($f['ukuranTeks']) ?></td>
+                            <td class="small text-nowrap d-none d-md-table-cell"><?= $this->escapeHtml($f['diubahTeks']) ?></td>
+                            <td class="text-end text-nowrap">
+<?php if ($this->bisaUbahIsi) : ?>
+                                <form method="post" class="d-inline aset-ganti-nama"><?= $csrf ?><input type="hidden" name="aksi" value="ganti_nama"><input type="hidden" name="nama" value="<?= $this->escapeHtmlAttr($a->nama) ?>"><input type="hidden" name="versi" value="<?= $this->escapeHtmlAttr((string) $this->versiDipilih) ?>"><input type="hidden" name="folder" value="<?= $this->escapeHtmlAttr($this->folder) ?>"><input type="hidden" name="jalur" value="<?= $this->escapeHtmlAttr($f['jalur']) ?>"><input type="hidden" name="nama_baru" value="">
+                                    <button class="btn btn-sm btn-link p-0 me-2" title="Ganti nama" data-nama="<?= $this->escapeHtmlAttr($f['nama']) ?>"><i class="bi bi-pencil"></i></button></form>
+                                <form method="post" class="d-inline"><?= $csrf ?><input type="hidden" name="aksi" value="hapus_file"><input type="hidden" name="nama" value="<?= $this->escapeHtmlAttr($a->nama) ?>"><input type="hidden" name="versi" value="<?= $this->escapeHtmlAttr((string) $this->versiDipilih) ?>"><input type="hidden" name="folder" value="<?= $this->escapeHtmlAttr($this->folder) ?>"><input type="hidden" name="jalur" value="<?= $this->escapeHtmlAttr($f['jalur']) ?>">
+                                    <button class="btn btn-sm btn-link p-0 text-danger-emphasis" title="Hapus" data-judul="Hapus" data-tombol="Hapus" data-bahaya="1" data-konfirmasi="<?= $this->escapeHtmlAttr('Hapus <b>' . $this->escapeHtml($f['nama']) . '</b>' . ($f['folder'] ? ' beserta isinya' : '') . '?') ?>"><i class="bi bi-trash"></i></button></form>
+<?php endif ?>
+                            </td>
+                        </tr>
+<?php endforeach ?>
+                    </tbody>
+                </table>
+            </div>
+<?php endif ?>
+
+<?php if ($this->bisaUbahIsi && ! $this->belumSiap) : ?>
+            <div class="row g-3 mt-1">
+                <div class="col-lg-8">
+                    <div class="aset-tarik p-3" id="asetTarik"
+                        data-nama="<?= $this->escapeHtmlAttr($a->nama) ?>"
+                        data-versi="<?= $this->escapeHtmlAttr((string) $this->versiDipilih) ?>"
+                        data-folder="<?= $this->escapeHtmlAttr($this->folder) ?>"
+                        data-csrf-nama="<?= $this->escapeHtmlAttr($this->fieldCsrf) ?>"
+                        data-csrf="<?= $this->escapeHtmlAttr($this->tokenCsrf) ?>"
+                        data-potongan="<?= (int) $this->ukuranPotongan ?>"
+                        data-maks="<?= (int) $this->unggahMaks ?>">
+                        <div class="fw-semibold mb-2"><i class="bi bi-cloud-arrow-up me-1"></i>Unggah ke /<?= $this->escapeHtml($this->folder) ?></div>
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <label class="btn btn-outline-success btn-sm mb-0"><i class="bi bi-file-earmark-plus me-1"></i>Pilih file<input type="file" multiple hidden id="asetPilihFile"></label>
+                            <label class="btn btn-outline-success btn-sm mb-0"><i class="bi bi-folder-plus me-1"></i>Pilih folder<input type="file" webkitdirectory multiple hidden id="asetPilihFolder"></label>
+<?php if ($this->zipTersedia) : ?>
+                            <div class="form-check align-self-center ms-1">
+                                <input class="form-check-input" type="checkbox" id="asetBongkar" checked>
+                                <label class="form-check-label small" for="asetBongkar">Bongkar file ZIP</label>
+                            </div>
+<?php endif ?>
+                        </div>
+                        <div class="small text-body-secondary">Atau tarik file ke sini. Maksimal <?= $this->escapeHtml($this->unggahMaksTeks) ?> per file; file besar dikirim bertahap. Jenis yang diizinkan: <?= $this->escapeHtml($this->jenisFile) ?><?= $this->zipTersedia ? ', dan ZIP (dibongkar)' : '' ?>.</div>
+                        <ul class="list-unstyled small mt-2 mb-0" id="asetDaftarUnggah"></ul>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <form method="post" class="d-flex gap-2" autocomplete="off">
+                        <?= $csrf ?>
+                        <input type="hidden" name="aksi" value="buat_folder">
+                        <input type="hidden" name="nama" value="<?= $this->escapeHtmlAttr($a->nama) ?>">
+                        <input type="hidden" name="versi" value="<?= $this->escapeHtmlAttr((string) $this->versiDipilih) ?>">
+                        <input type="hidden" name="folder" value="<?= $this->escapeHtmlAttr($this->folder) ?>">
+                        <input class="form-control form-control-sm" name="nama_folder" required maxlength="100" placeholder="Nama folder baru" aria-label="Nama folder baru">
+                        <button class="btn btn-sm btn-outline-success text-nowrap"><i class="bi bi-folder-plus me-1"></i>Buat</button>
+                    </form>
+                </div>
+            </div>
+<?php elseif ($a->berversi && $this->versiDipilih !== null && ! $this->bisaUbahIsi) : ?>
+            <p class="small text-body-secondary mb-0">Isi versi yang sudah terbit tidak bisa diubah, karena browser pengunjung menyimpannya lama. Untuk perubahan, buat versi baru (bisa disalin dari versi ini), unggah perubahannya, lalu terbitkan.</p>
+<?php endif ?>
+        </div>
+    </div>
+<?php endif ?>
+
+<?php if ($this->riwayat) : ?>
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5">Riwayat</h2>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Waktu</th><th>Peristiwa</th><th>Keterangan</th><th>Oleh</th></tr></thead>
+                    <tbody>
+<?php foreach ($this->riwayat as $r) : ?>
+                        <tr>
+                            <td class="text-nowrap small"><?= $this->escapeHtml($r['waktu']) ?></td>
+                            <td class="text-nowrap small"><?= $this->escapeHtml($r['peristiwa']) ?></td>
+                            <td class="small"><?= $this->escapeHtml($r['keterangan']) ?></td>
+                            <td class="small"><?= $this->escapeHtml($r['pelaku']) ?></td>
+                        </tr>
+<?php endforeach ?>
+                    </tbody>
+                </table>
+            </div>
+            <p class="small text-body-secondary mt-2 mb-0">Waktu menurut <?= $this->escapeHtml($this->zonaWaktu) ?>.</p>
+        </div>
+    </div>
+<?php endif ?>
+</div>
+<div class="modal fade" id="dapurDialog" tabindex="-1" aria-labelledby="dapurDialogJudul" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form class="modal-content" id="dapurDialogForm" autocomplete="off">
+            <div class="modal-header"><h2 class="modal-title h5" id="dapurDialogJudul"></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button></div>
+            <div class="modal-body">
+                <div id="dapurDialogPesan"></div>
+                <input class="form-control mt-2 d-none" id="dapurDialogIsian" maxlength="255" aria-label="Isian">
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="dapurDialogBatal">Batal</button><button class="btn btn-success fw-semibold" id="dapurDialogYa"></button></div>
+        </form>
+    </div>
+</div>
+<script>
+(() => {
+    // Jendela dialog dashboard pengganti confirm()/prompt()/alert() browser, agar serasi dengan tema dan pesannya bisa
+    // berformat. pesan berupa HTML yang sudah aman (nama dari server sudah di-escape; dari JavaScript lewat teksAman).
+    const dialog = (() => {
+        const el = document.getElementById('dapurDialog');
+        const isian = document.getElementById('dapurDialogIsian');
+        const ya = document.getElementById('dapurDialogYa');
+        const batal = document.getElementById('dapurDialogBatal');
+        let selesai = null;
+        el.addEventListener('hidden.bs.modal', () => { if (selesai) { const s = selesai; selesai = null; s(null); } });
+        document.getElementById('dapurDialogForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const s = selesai;
+            selesai = null;
+            bootstrap.Modal.getOrCreateInstance(el).hide();
+            s?.(isian.classList.contains('d-none') ? true : isian.value);
+        });
+        el.addEventListener('shown.bs.modal', () => (isian.classList.contains('d-none') ? ya : isian).focus());
+        return ({ judul = 'Konfirmasi', pesan = '', tombol = 'Ya', bahaya = false, nilai = null, tanpaBatal = false }) => new Promise((hasil) => {
+            selesai = hasil;
+            el.querySelector('.modal-title').textContent = judul;
+            document.getElementById('dapurDialogPesan').innerHTML = pesan;
+            isian.classList.toggle('d-none', nilai === null);
+            isian.value = nilai ?? '';
+            ya.textContent = tombol;
+            ya.className = 'btn fw-semibold ' + (bahaya ? 'btn-danger' : 'btn-success');
+            batal.classList.toggle('d-none', tanpaBatal);
+            bootstrap.Modal.getOrCreateInstance(el).show();
+            if (nilai !== null) {
+                el.addEventListener('shown.bs.modal', () => {
+                    const titik = isian.value.lastIndexOf('.');
+                    isian.setSelectionRange(0, titik > 0 ? titik : isian.value.length);
+                }, { once: true });
+            }
+        });
+    })();
+    const teksDialog = (s) => { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; };
+    const pesanGalat = (teks) => dialog({ judul: 'Tidak Berhasil', pesan: teksDialog(teks), tombol: 'Tutup', tanpaBatal: true });
+
+    // Tombol dalam form dengan data-konfirmasi: tanyakan dulu, baru kirim form.
+    document.addEventListener('click', async (e) => {
+        const tombol = e.target.closest('[data-konfirmasi]');
+        if (!tombol) {
+            return;
+        }
+        e.preventDefault();
+        const form = tombol.closest('form');
+        const ok = await dialog({
+            judul: tombol.dataset.judul || 'Konfirmasi',
+            pesan: tombol.dataset.konfirmasi,
+            tombol: tombol.dataset.tombol || 'Ya',
+            bahaya: tombol.dataset.bahaya === '1',
+        });
+        if (ok && form) {
+            form.submit();
+        }
+    });
+
+    // Ganti nama: tanyakan nama baru lalu kirim form.
+    document.querySelectorAll('.aset-ganti-nama button').forEach((tombol) => {
+        tombol.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const baru = await dialog({ judul: 'Ganti Nama', pesan: 'Nama baru untuk <b>' + teksDialog(tombol.dataset.nama) + '</b>:', tombol: 'Simpan', nilai: tombol.dataset.nama });
+            if (baru && baru !== tombol.dataset.nama) {
+                const form = tombol.closest('form');
+                form.querySelector('[name=nama_baru]').value = baru;
+                form.submit();
+            }
+        });
+    });
+
+    // Unggah bertahap: setiap file dipotong (bawaan 1 MB) dan dikirim berurutan.
+    const kotak = document.getElementById('asetTarik');
+    if (!kotak) {
+        return;
+    }
+
+    const d = kotak.dataset;
+    const daftar = document.getElementById('asetDaftarUnggah');
+    const bongkar = document.getElementById('asetBongkar');
+    let berjalan = false;
+    const antrean = [];
+
+    const kirim = async (data) => {
+        const form = new FormData();
+        form.append(d.csrfNama, d.csrf);
+        for (const [k, v] of Object.entries(data)) {
+            form.append(k, v);
+        }
+        const jawab = await fetch(location.pathname, { method: 'POST', body: form, credentials: 'same-origin' });
+        let isi = {};
+        try { isi = await jawab.json(); } catch (_) { isi = { galat: 'Server menjawab ' + jawab.status + '.' }; }
+        if (!jawab.ok || isi.galat) {
+            throw new Error(isi.galat || ('Server menjawab ' + jawab.status + '.'));
+        }
+        return isi;
+    };
+
+    const unggahSatu = async (file, jalur) => {
+        const baris = document.createElement('li');
+        const teks = document.createElement('span');
+        teks.textContent = jalur + ' ';
+        const status = document.createElement('span');
+        status.className = 'text-body-secondary';
+        baris.append(teks, status);
+        daftar.append(baris);
+
+        if (file.size > Number(d.maks)) {
+            status.className = 'text-danger';
+            status.textContent = 'terlalu besar';
+            return false;
+        }
+
+        let kode = '';
+        try {
+            kode = (await kirim({ aksi: 'unggah_mulai', nama: d.nama, versi: d.versi, folder: d.folder, file: jalur, ukuran: file.size, bongkar: bongkar && bongkar.checked ? '1' : '0' })).kode;
+            const potongan = Number(d.potongan);
+            for (let nomor = 0, awal = 0; awal < file.size || (nomor === 0 && file.size === 0); nomor++, awal += potongan) {
+                if (file.size > 0) {
+                    await kirim({ aksi: 'unggah_potongan', kode, nomor, potongan: file.slice(awal, awal + potongan) });
+                    status.textContent = Math.min(100, Math.round((awal + potongan) / file.size * 100)) + '%';
+                } else {
+                    break;
+                }
+            }
+            const hasil = await kirim({ aksi: 'unggah_selesai', kode });
+            status.className = 'text-success';
+            status.textContent = hasil.pesan || 'selesai';
+            return true;
+        } catch (e) {
+            status.className = 'text-danger';
+            status.textContent = e.message;
+            if (kode) {
+                kirim({ aksi: 'unggah_batal', kode }).catch(() => {});
+            }
+            return false;
+        }
+    };
+
+    const jalankan = async () => {
+        if (berjalan) {
+            return;
+        }
+        berjalan = true;
+        let berhasil = 0, gagal = 0;
+        while (antrean.length) {
+            const [file, jalur] = antrean.shift();
+            if (await unggahSatu(file, jalur)) {
+                berhasil++;
+            } else {
+                gagal++;
+            }
+        }
+        berjalan = false;
+        if (berhasil > 0 && gagal === 0) {
+            // Semua berhasil: muat ulang daftar otomatis sebentar kemudian.
+            const muat = document.createElement('li');
+            muat.className = 'text-body-secondary';
+            muat.textContent = 'Selesai. Memuat ulang daftar…';
+            daftar.append(muat);
+            setTimeout(() => location.reload(), 800);
+        } else if (berhasil > 0) {
+            // Ada yang gagal: daftar tidak dimuat ulang otomatis agar pesan galatnya tetap terbaca.
+            const muat = document.createElement('li');
+            muat.innerHTML = '<a href="#" class="fw-semibold">Muat ulang daftar file</a>';
+            muat.querySelector('a').addEventListener('click', (e) => { e.preventDefault(); location.reload(); });
+            daftar.append(muat);
+        }
+    };
+
+    const tambah = (files) => {
+        for (const file of files) {
+            antrean.push([file, file.webkitRelativePath || file.name]);
+        }
+        jalankan();
+    };
+
+    document.getElementById('asetPilihFile').addEventListener('change', (e) => { tambah(e.target.files); e.target.value = ''; });
+    document.getElementById('asetPilihFolder').addEventListener('change', (e) => { tambah(e.target.files); e.target.value = ''; });
+    ['dragenter', 'dragover'].forEach((n) => kotak.addEventListener(n, (e) => { e.preventDefault(); kotak.classList.add('aset-tarik-aktif'); }));
+    ['dragleave', 'drop'].forEach((n) => kotak.addEventListener(n, () => kotak.classList.remove('aset-tarik-aktif')));
+    kotak.addEventListener('drop', (e) => { e.preventDefault(); tambah(e.dataTransfer.files); });
+})();
+</script>
