@@ -489,7 +489,13 @@ $dasarQ = ['nama' => $a->nama, 'versi' => $this->versiDipilih];
         const ya = document.getElementById('dapurDialogYa');
         const batal = document.getElementById('dapurDialogBatal');
         let selesai = null;
-        el.addEventListener('hidden.bs.modal', () => { if (selesai) { const s = selesai; selesai = null; s(null); } });
+        el.addEventListener('hidden.bs.modal', () => {
+            // Bootstrap membuka kembali gulir halaman saat jendela ditutup; jaga bila jendela lain masih terbuka.
+            if (document.querySelector('.modal.show')) {
+                document.body.classList.add('modal-open');
+            }
+            if (selesai) { const s = selesai; selesai = null; s(null); }
+        });
         document.getElementById('dapurDialogForm').addEventListener('submit', (e) => {
             e.preventDefault();
             const s = selesai;
@@ -498,6 +504,14 @@ $dasarQ = ['nama' => $a->nama, 'versi' => $this->versiDipilih];
             s?.(isian.classList.contains('d-none') ? true : isian.value);
         });
         el.addEventListener('shown.bs.modal', () => (isian.classList.contains('d-none') ? ya : isian).focus());
+        // Selalu di atas jendela lain (mis. Bagikan), dengan latar gelapnya di antara keduanya.
+        el.style.zIndex = '1065';
+        el.addEventListener('show.bs.modal', () => setTimeout(() => {
+            const latar = document.querySelectorAll('.modal-backdrop');
+            if (latar.length > 1) {
+                latar[latar.length - 1].style.zIndex = '1060';
+            }
+        }));
         return ({ judul = 'Konfirmasi', pesan = '', tombol = 'Ya', bahaya = false, nilai = null, tanpaBatal = false }) => new Promise((hasil) => {
             selesai = hasil;
             el.querySelector('.modal-title').textContent = judul;
