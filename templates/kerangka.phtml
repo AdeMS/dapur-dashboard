@@ -46,6 +46,27 @@
 <?php $n = $this->notifikasi ?>
 <?php $angka = $n['jumlah'] >= AdeMS\Dapur\Dashboard\PesanError::JUMLAH_MAKS ? $n['jumlah'] . '+' : (string) $n['jumlah'] ?>
 <?php $this->placeholder('menu-alat')->captureStart() ?>
+<style>
+    /* Popup notifikasi: lebar tetap (tidak ikut melebar mengikuti pesan error yang panjang) dan tidak lebih
+       lebar dari layar; di HP menempel selebar layar tepat di bawah navbar, bisa digulir bila tinggi. */
+    .navbar .dapur-tema .dashboard-notifikasi {
+        width: 22rem;
+        max-width: calc(100vw - 1rem);
+        max-height: calc(100dvh - var(--dapur-navbar-tinggi, 4.25rem) - 1rem);
+        overflow-y: auto;
+    }
+    @media (max-width: 575.98px) {
+        .navbar .dapur-tema .dashboard-notifikasi {
+            position: fixed;
+            top: calc(var(--dapur-navbar-tinggi, 4.25rem) + .25rem);
+            left: .5rem;
+            right: .5rem;
+            width: auto;
+            max-width: none;
+            margin-top: 0;
+        }
+    }
+</style>
                             <li class="nav-item dropdown">
                                 <button class="btn btn-link nav-link position-relative d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifikasi<?= $n['jumlah'] > 0 ? ', ' . $angka . ' pesan error belum dibaca' : '' ?>">
                                     <i class="bi bi-bell<?= $n['jumlah'] > 0 ? '-fill' : '' ?>"></i>
