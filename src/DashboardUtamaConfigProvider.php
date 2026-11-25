@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AdeMS\Dapur\Dashboard;
 
+use AdeMS\Dapur\User\DaftarUser;
 use AdeMS\Dapur\User\Konteks;
 
 /**
@@ -34,6 +35,15 @@ final class DashboardUtamaConfigProvider
             'ikon'     => 'globe',
             'kelompok' => 'Pengaturan',
         ]]);
+
+        // Aset (adems/dapur-asset) dikelola di dashboard utama, khusus admin super.
+        $config['dashboard']['menu'][] = [
+            'label'    => 'Aset',
+            'rute'     => 'dashboard.aset',
+            'ikon'     => 'box-seam',
+            'peran'    => DaftarUser::PERAN_ADMIN_SUPER,
+            'kelompok' => 'Pengaturan',
+        ];
 
         return $config;
     }
