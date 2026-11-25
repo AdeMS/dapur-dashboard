@@ -94,7 +94,7 @@ final class TampilanTest extends TestCase
     {
         $data = $this->render('admin');
 
-        self::assertSame(['dashboard.ringkasan', 'dashboard.user'], array_column($data['menu'], 'rute'));
+        self::assertSame(['dashboard.ringkasan', 'dashboard.berkas', 'dashboard.user'], array_column($data['menu'], 'rute'));
         self::assertSame('admin', $data['peranUser']);
         self::assertSame('/dashboard/profil', $data['alamatProfil']);
         self::assertSame('/dashboard/pengaturan', $data['alamatPengaturan']);
@@ -103,13 +103,13 @@ final class TampilanTest extends TestCase
     public function testAdminSuperDanAdminWebMelihatMenuUser(): void
     {
         foreach (['admin_super', 'admin_web'] as $peran) {
-            self::assertSame(['dashboard.ringkasan', 'dashboard.user'], array_column($this->render($peran)['menu'], 'rute'), $peran);
+            self::assertSame(['dashboard.ringkasan', 'dashboard.berkas', 'dashboard.user'], array_column($this->render($peran)['menu'], 'rute'), $peran);
         }
     }
 
     public function testAnggotaTidakMelihatMenuUser(): void
     {
-        self::assertSame(['dashboard.ringkasan'], array_column($this->render('anggota')['menu'], 'rute'));
+        self::assertSame(['dashboard.ringkasan', 'dashboard.berkas'], array_column($this->render('anggota')['menu'], 'rute'));
     }
 
     public function testMenuDikumpulkanPerKelompok(): void
