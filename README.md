@@ -7,9 +7,13 @@ Dapur, atau sebagai dashboard milik satu website.
 ## Kebutuhan
 
 - Dapur AdeMS 2.9 atau lebih baru (layout dengan menu samping dan placeholder `menu-alat`, log error)
-- [adems/dapur-user](https://github.com/AdeMS/dapur-user) 2.5 (ikut terpasang otomatis, bersama
-  [adems/dapur-email](https://github.com/AdeMS/dapur-email) dan
-  [adems/dapur-database](https://github.com/AdeMS/dapur-database))
+- [adems/dapur-user](https://github.com/AdeMS/dapur-user) 2.6 (ikut terpasang otomatis, bersama
+  [adems/dapur-email](https://github.com/AdeMS/dapur-email),
+  [adems/dapur-database](https://github.com/AdeMS/dapur-database),
+  [adems/dapur-asset](https://github.com/AdeMS/dapur-asset), dan
+  [adems/dapur-berkas](https://github.com/AdeMS/dapur-berkas))
+- Dapur AdeMS 2.11 atau lebih baru agar Bootstrap di layout bisa dipilih versinya per website lewat halaman Aset
+  (pada inti yang lebih lama, layout tetap memakai Bootstrap bawaan)
 - Dapur AdeMS 2.10 atau lebih baru untuk perintah `php dapur pasang` (pada inti yang lebih lama, pakai
   `vendor/bin/dapur-user pasang`)
 - MariaDB atau MySQL yang sudah diatur di `config/autoload/database.local.php` (SQLite juga bisa dipakai)
@@ -23,7 +27,7 @@ Tulis paketnya di `composer.local.json`, lalu jalankan `composer update`:
 ```json
 {
     "require": {
-        "adems/dapur-dashboard": "^2.8"
+        "adems/dapur-dashboard": "^2.9"
     }
 }
 ```
@@ -172,6 +176,40 @@ Membaca tidak menghapus error. Error dihapus otomatis oleh log error inti setela
 Dapur AdeMS 2.9 atau lebih baru (lihat [Log Error](https://github.com/AdeMS/dapur#log-error)); pada inti yang lebih
 lama, lonceng tidak tampil.
 
+### Berkas
+
+Menu **Berkas** (`/berkas`, atau `/dashboard/berkas` di dashboard website) ada untuk semua user yang login. Isinya
+memakai modul [adems/dapur-berkas](https://github.com/AdeMS/dapur-berkas): Berkas Saya (dengan kuota), lokasi tambahan
+milik akun, Dibagikan dengan saya, Tempat sampah, pencarian, tampilan daftar atau ikon, pratinjau, unggah bertahap,
+pindah, ganti nama, berbagi ke akun atau ke semua anggota website ini, dan tautan publik (`/b/<token>`, tanpa login).
+
+Berkas dibuka lewat `/berkas/<kode>/<nama>` dengan pemeriksaan akses setiap kali. Folder `data/berkas/` di inti harus
+bisa ditulis web server.
+
+### Aset
+
+Halaman **Aset** (`/aset`, kelompok menu Pengaturan) hanya ada di dashboard utama dan hanya untuk admin super. Isinya
+memakai modul [adems/dapur-asset](https://github.com/AdeMS/dapur-asset) (lihat README-nya untuk konsep sumber, versi,
+dan akses):
+
+- daftar semua aset: dari Composer (mis. Bootstrap), dari file konfigurasi, dan dari dashboard;
+- **Tambah aset** `vendor/aplikasi`, berversi atau tanpa versi, publik atau wajib login;
+- **Versi**: buat versi baru (kosong atau salinan versi lain), unggah filenya, lalu **Terbitkan**. Isi versi yang sudah
+  terbit dikunci; **Jadikan bawaan** memilih versi bawaan aset;
+- **Versi per website**: tiap website (dan dashboard utama) bisa memakai versi lain; peringatan tampil bila versi
+  mayornya berbeda dari versi bawaan (mis. Bootstrap 6 untuk tampilan yang dibuat dengan Bootstrap 5);
+- **File**: jelajahi folder, buat folder, ganti nama, hapus, dan unggah file atau satu folder sekaligus (pilih atau
+  tarik ke kotak unggah). File dikirim bertahap per 1 MB, sehingga file besar tidak terhalang batas unggah PHP.
+  File ZIP bisa langsung dibongkar;
+- **Riwayat** perubahan aset.
+
+Aset ber-akses **wajib login** dilayani bila pengunjung sedang login di dashboard website yang sama dan punya akses
+ke website itu.
+
+Agar route `/asset/...` juga berlaku untuk website yang tidak memakai dashboard, cantumkan
+`AdeMS\Dapur\Asset\ConfigProvider::class` di `config/modul.local.php` inti. Folder `data/asset/` di inti harus bisa
+ditulis web server agar file bisa diunggah.
+
 ## Pengaturan
 
 Tulis di `config/autoload/*.php`, milik inti atau milik website:
@@ -196,6 +234,28 @@ return [
 
 Website bisa memakai database sendiri lewat `config/autoload/*.local.php` miliknya. Untuk dashboard yang sama
 sekali berbeda, buat modul sendiri di folder `module/` website tanpa paket ini.
+
+## Memperbarui dari 2.8
+
+Dashboard 2.9 membawa dua modul baru: [adems/dapur-asset](https://github.com/AdeMS/dapur-asset) (halaman **Aset**
+untuk admin super) dan [adems/dapur-berkas](https://github.com/AdeMS/dapur-berkas) (halaman **Berkas** untuk semua
+user). Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.9"`, jalankan `composer update`
+dari folder inti, hapus cache konfigurasi, lalu jalankan sekali:
+
+```bash
+php dapur pasang
+```
+
+Perintah itu membuat empat tabel aset (`asset`, `asset_versi`, `asset_website`, `asset_riwayat`) dan empat tabel berkas
+(`berkas`, `berkas_bagi`, `berkas_kuota`, `berkas_riwayat`). Lalu buat folder `data/asset/` dan `data/berkas/` di inti
+yang bisa ditulis web server (grup web server, izin 2770). Disarankan juga menambahkan
+`AdeMS\Dapur\Asset\ConfigProvider::class` di `config/modul.local.php` inti (lihat [Aset](#aset)).
+
+Dashboard 2.9 memakai adems/dapur-user 2.6: setiap akun mendapat kode acak, dan alamat serta form memakai kode itu
+alih-alih nomor akun (mis. profil rekan `/profil?u=<kode akun>`). `php dapur pasang` di atas sekaligus membuat kode
+untuk akun yang sudah ada.
+
+Perubahan lain: popup notifikasi di layar kecil kini selebar layar di bawah navbar dan bisa digulir.
 
 ## Memperbarui dari 2.7
 
