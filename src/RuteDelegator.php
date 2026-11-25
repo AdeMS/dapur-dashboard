@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace AdeMS\Dapur\Dashboard;
 
+use AdeMS\Dapur\Dashboard\Handler\AsetHandler;
 use AdeMS\Dapur\Dashboard\Handler\PesanErrorHandler;
 use AdeMS\Dapur\Dashboard\Handler\RingkasanHandler;
 use AdeMS\Dapur\Dashboard\Handler\WebsiteHandler;
@@ -35,9 +36,14 @@ final class RuteDelegator
         $app->get($atur->rute('/foto/{kode:[a-f0-9]{32}}'), [...$masuk, ConfigProvider::FOTO], 'dashboard.foto');
         $app->get($atur->rute('/lokasi'), [...$masuk, ConfigProvider::LOKASI], 'dashboard.lokasi');
         $app->route($atur->rute('/error'), [...$masuk, PesanErrorHandler::class], ['GET', 'POST'], 'dashboard.error');
+        $app->route($atur->rute('/berkas'), [...$masuk, ConfigProvider::BERKAS], ['GET', 'POST'], 'dashboard.berkas');
+        $app->get($atur->rute('/berkas/{kode:[0-9A-Za-z]{22}}[/{nama:.+}]'), [...$masuk, ConfigProvider::BERKAS_BUKA], 'dashboard.berkas.buka');
+        // Tautan publik berkas: tanpa login dan tanpa session.
+        $app->get($atur->rute('/b/{token:[0-9A-Za-z]{32}}[/{sisa:.+}]'), ConfigProvider::BERKAS_PUBLIK, 'dashboard.berkas.publik');
 
         if ($atur->utama) {
             $app->get($atur->rute('/website'), [...$masuk, WebsiteHandler::class], 'dashboard.website');
+            $app->route($atur->rute('/aset'), [...$masuk, AsetHandler::class], ['GET', 'POST'], 'dashboard.aset');
         }
 
         return $app;
