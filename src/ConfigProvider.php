@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace AdeMS\Dapur\Dashboard;
 
+use AdeMS\Dapur\Asset\ConfigProvider as AsetConfigProvider;
+use AdeMS\Dapur\Asset\PenjagaAkses;
+use AdeMS\Dapur\Berkas\ConfigProvider as BerkasConfigProvider;
 use AdeMS\Dapur\User\ConfigProvider as UserConfigProvider;
 use Mezzio\Application;
 
@@ -28,6 +31,11 @@ final class ConfigProvider
     public const FOTO        = 'dashboard.handler.foto';
     public const LOKASI      = 'dashboard.handler.lokasi';
 
+    /** Berkas (adems/dapur-berkas): penjelajah, membuka berkas, dan tautan publik. */
+    public const BERKAS        = 'dashboard.handler.berkas';
+    public const BERKAS_BUKA   = 'dashboard.handler.berkas_buka';
+    public const BERKAS_PUBLIK = 'dashboard.handler.berkas_publik';
+
     /** Halaman tautan email (tanpa login): lupa kata sandi, membuat kata sandi, dan konfirmasi email baru. */
     public const LUPA_SANDI       = 'dashboard.handler.lupa_sandi';
     public const ATUR_SANDI       = 'dashboard.handler.atur_sandi';
@@ -37,6 +45,8 @@ final class ConfigProvider
     public function __invoke(): array
     {
         $user = (new UserConfigProvider())();
+        $aset   = (new AsetConfigProvider())();
+        $berkas = (new BerkasConfigProvider())();
 
         return [
             'dashboard'    => [
@@ -46,20 +56,21 @@ final class ConfigProvider
                 'batas_diam'   => 3600,
                 'menu'         => [
                     ['label' => 'Ringkasan', 'rute' => 'dashboard.ringkasan', 'ikon' => 'speedometer2'],
+                    ['label' => 'Berkas', 'rute' => 'dashboard.berkas', 'ikon' => 'folder2-open'],
                     // 'peran': menu hanya tampil untuk user dengan peran ini ('admin' = admin super atau admin web).
                     // 'kelompok': judul kelompok di menu samping (tanpa kunci ini: 'Dashboard').
                     ['label' => 'User', 'rute' => 'dashboard.user', 'ikon' => 'people', 'peran' => 'admin', 'kelompok' => 'Pengaturan'],
                 ],
             ],
             // Skema tabel user ikut terdaftar, agar `php dapur pasang` memasangnya (adems/dapur-database).
-            'dapur'        => $user['dapur'] ?? [],
+            'dapur'        => ['skema' => [...($user['dapur']['skema'] ?? []), ...$aset['dapur']['skema'], ...$berkas['dapur']['skema']]],
             'templates'    => [
-                'paths' => $user['templates']['paths'] + [
+                'paths' => $user['templates']['paths'] + $berkas['templates']['paths'] + [
                     'dashboard' => [dirname(__DIR__) . '/templates'],
                 ],
             ],
             'dependencies' => [
-                'factories'  => $user['dependencies']['factories'] + array_fill_keys([
+                'factories'  => $user['dependencies']['factories'] + $aset['dependencies']['factories'] + $berkas['dependencies']['factories'] + array_fill_keys([
                     Pengaturan::class,
                     Tampilan::class,
                     self::WAJIB_MASUK,
@@ -70,6 +81,9 @@ final class ConfigProvider
                     self::KELOLA_USER,
                     self::FOTO,
                     self::LOKASI,
+                    self::BERKAS,
+                    self::BERKAS_BUKA,
+                    self::BERKAS_PUBLIK,
                     self::LUPA_SANDI,
                     self::ATUR_SANDI,
                     self::VERIFIKASI_EMAIL,
@@ -77,11 +91,16 @@ final class ConfigProvider
                     Handler\PesanErrorHandler::class,
                     Handler\RingkasanHandler::class,
                     Handler\WebsiteHandler::class,
+                    Handler\AsetHandler::class,
+                    // Aset ber-akses "login" (adems/dapur-asset) diperiksa dengan login dashboard.
+                    PenjagaAkses::class,
                 ], PabrikLayanan::class),
+                // Route /asset/... dan pengirim file aset ikut terdaftar (aman bila modul aset juga dimuat sendiri).
                 'delegators' => [
-                    Application::class => [RuteDelegator::class],
-                ],
+                    Application::class => [...$aset['dependencies']['delegators'][Application::class], RuteDelegator::class],
+                ] + $aset['dependencies']['delegators'],
             ],
+            'view_helpers' => $aset['view_helpers'],
         ];
     }
 }
