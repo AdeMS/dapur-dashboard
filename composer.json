@@ -19,8 +19,10 @@
     ],
     "require": {
         "php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
+        "adems/dapur-asset": "^1.0",
+        "adems/dapur-berkas": "^1.0",
         "adems/dapur-database": "^1.0",
-        "adems/dapur-user": "^2.5",
+        "adems/dapur-user": "^2.6",
         "composer-runtime-api": "^2.0",
         "laminas/laminas-config-aggregator": "^1.20",
         "laminas/laminas-diactoros": "^3.9",
