@@ -12,6 +12,8 @@ use AdeMS\Dapur\Database\KonteksSkema;
 use AdeMS\Dapur\Database\Pemasang;
 use AdeMS\Dapur\User\Middleware\WajibMasukMiddleware;
 use AdeMS\Dapur\User\Sesi;
+use AdeMS\Dapur\Asset\AsetSkema;
+use AdeMS\Dapur\Berkas\BerkasSkema;
 use AdeMS\Dapur\User\UserSkema;
 use Closure;
 use Laminas\Db\Adapter\Adapter;
@@ -97,9 +99,9 @@ final class RingkasanHandlerTest extends TestCase
         return static fn (): Pemasang => new Pemasang(new KonteksSkema($db), [new UserSkema()]);
     }
 
-    public function testSkemaUserIkutTerdaftarLewatDashboard(): void
+    public function testSkemaUserDanAsetIkutTerdaftarLewatDashboard(): void
     {
-        self::assertSame([UserSkema::class], (new ConfigProvider())()['dapur']['skema']);
+        self::assertSame([UserSkema::class, AsetSkema::class, BerkasSkema::class], (new ConfigProvider())()['dapur']['skema']);
     }
 
     public function testAdminSuperDiingatkanBilaDatabasePerluDiperbarui(): void
