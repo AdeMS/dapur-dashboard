@@ -64,7 +64,7 @@ final class PengaturanTest extends TestCase
 
         self::assertFalse($config['dashboard']['utama']);
         self::assertSame('/dashboard', $config['dashboard']['alamat_dasar']);
-        self::assertSame(['dashboard.ringkasan', 'dashboard.user'], array_column($config['dashboard']['menu'], 'rute'));
+        self::assertSame(['dashboard.ringkasan', 'dashboard.berkas', 'dashboard.user'], array_column($config['dashboard']['menu'], 'rute'));
     }
 
     public function testPintuMengikutiPengaturanDashboard(): void
@@ -119,7 +119,7 @@ final class PengaturanTest extends TestCase
         self::assertTrue($config['dashboard']['utama']);
         self::assertSame('/', $config['dashboard']['alamat_dasar']);
         self::assertSame(
-            ['dashboard.ringkasan', 'dashboard.website', 'dashboard.user'],
+            ['dashboard.ringkasan', 'dashboard.website', 'dashboard.berkas', 'dashboard.user', 'dashboard.aset'],
             array_column($config['dashboard']['menu'], 'rute'),
         );
     }
@@ -138,6 +138,7 @@ final class PengaturanTest extends TestCase
         $menu = array_column($atur->menu, 'peran', 'rute');
 
         self::assertNull($menu['dashboard.ringkasan']);
+        self::assertNull($menu['dashboard.berkas']);
         self::assertSame('admin', $menu['dashboard.user']);
     }
 
