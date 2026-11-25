@@ -4,17 +4,26 @@ declare(strict_types=1);
 
 namespace AdeMS\Dapur\Dashboard;
 
+use AdeMS\Dapur\Asset\DaftarAset;
+use AdeMS\Dapur\Asset\Katalog;
+use AdeMS\Dapur\Asset\PenjagaAkses;
+use AdeMS\Dapur\Asset\Pengaturan as PengaturanAset;
+use AdeMS\Dapur\Asset\Unggahan;
+use AdeMS\Dapur\Berkas\PabrikLayanan as PabrikBerkas;
+use AdeMS\Dapur\Dashboard\Handler\AsetHandler;
 use AdeMS\Dapur\Dashboard\Handler\PesanErrorHandler;
 use AdeMS\Dapur\Dashboard\Handler\RingkasanHandler;
 use AdeMS\Dapur\Dashboard\Handler\WebsiteHandler;
 use AdeMS\Dapur\Database\PabrikPemasang;
 use AdeMS\Dapur\Database\Pemasang;
+use AdeMS\Dapur\User\DaftarUser;
 use AdeMS\Dapur\User\Konteks;
 use AdeMS\Dapur\User\PabrikLayanan as PabrikUser;
 use AdeMS\Dapur\User\Pengaturan as PengaturanUser;
 use AdeMS\Dapur\User\PengaturanUser as PengaturanMilikUser;
 use App\Error\LogError;
 use AdeMS\Dapur\User\Pintu;
+use Laminas\Db\Adapter\Adapter;
 use Mezzio\Template\TemplateRendererInterface;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
@@ -59,6 +68,9 @@ final class PabrikLayanan
             ),
             ConfigProvider::FOTO => PabrikUser::foto($c, self::pintu($c)),
             ConfigProvider::LOKASI => PabrikUser::lokasi($c),
+            ConfigProvider::BERKAS => PabrikBerkas::jelajah($c, self::pintu($c), $c->get(Tampilan::class)),
+            ConfigProvider::BERKAS_BUKA => PabrikBerkas::buka($c, self::pintu($c)),
+            ConfigProvider::BERKAS_PUBLIK => PabrikBerkas::publik($c, self::pintu($c)),
             ConfigProvider::LUPA_SANDI => PabrikUser::lupaSandi($c, self::pintu($c)),
             ConfigProvider::ATUR_SANDI => PabrikUser::aturSandi($c, self::pintu($c)),
             ConfigProvider::VERIFIKASI_EMAIL => PabrikUser::verifikasiEmail($c, self::pintu($c)),
@@ -68,6 +80,21 @@ final class PabrikLayanan
                 'php dapur pasang' . (Konteks::websiteAktif() === null ? '' : ' --website=' . Konteks::websiteAktif()),
             ),
             WebsiteHandler::class => new WebsiteHandler($c->get(Tampilan::class), Konteks::folderInti()),
+            AsetHandler::class => new AsetHandler(
+                $c->get(Tampilan::class),
+                $c->get(Katalog::class),
+                $c->has(Adapter::class) ? $c->get(DaftarAset::class) : null,
+                $c->get(PengaturanAset::class),
+                $c->get(Unggahan::class),
+                self::websiteTerdaftar($c),
+                $c->get(PengaturanUser::class)->zonaWaktu,
+            ),
+            PenjagaAkses::class => new PenjagaAksesUser(
+                $c->get(DaftarUser::class),
+                Konteks::folderSesi(),
+                $c->get(Pengaturan::class)->batasDiam,
+                Konteks::lingkup(),
+            ),
             default => throw new RuntimeException("Layanan dashboard tidak dikenal: {$nama}"),
         };
     }
