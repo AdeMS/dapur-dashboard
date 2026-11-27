@@ -8,6 +8,7 @@ use AdeMS\Dapur\Dashboard\Handler\AsetHandler;
 use AdeMS\Dapur\Dashboard\Handler\PesanErrorHandler;
 use AdeMS\Dapur\Dashboard\Handler\RingkasanHandler;
 use AdeMS\Dapur\Dashboard\Handler\WebsiteHandler;
+use AdeMS\Dapur\User\FotoUser;
 use AdeMS\Dapur\User\Middleware\MulaiSesiMiddleware;
 use Mezzio\Application;
 use Psr\Container\ContainerInterface;
@@ -33,7 +34,8 @@ final class RuteDelegator
         $app->route($atur->rute('/profil'), [...$masuk, ConfigProvider::PROFIL], ['GET', 'POST'], 'dashboard.profil');
         $app->route($atur->rute('/pengaturan'), [...$masuk, ConfigProvider::PENGATURAN], ['GET', 'POST'], 'dashboard.pengaturan');
         $app->route($atur->rute('/user'), [...$masuk, ConfigProvider::KELOLA_USER], ['GET', 'POST'], 'dashboard.user');
-        $app->get($atur->rute('/foto/{kode:[a-f0-9]{32}}'), [...$masuk, ConfigProvider::FOTO], 'dashboard.foto');
+        // Kode foto: 32 heksadesimal (data/upload/avatar) atau 22 huruf/angka (foto di folder Foto Profil berkas).
+        $app->get($atur->rute('/foto/{kode:' . FotoUser::POLA_KODE . '}'), [...$masuk, ConfigProvider::FOTO], 'dashboard.foto');
         $app->get($atur->rute('/lokasi'), [...$masuk, ConfigProvider::LOKASI], 'dashboard.lokasi');
         $app->route($atur->rute('/error'), [...$masuk, PesanErrorHandler::class], ['GET', 'POST'], 'dashboard.error');
         $app->route($atur->rute('/berkas'), [...$masuk, ConfigProvider::BERKAS], ['GET', 'POST'], 'dashboard.berkas');
