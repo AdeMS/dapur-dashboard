@@ -7,7 +7,7 @@ Dapur, atau sebagai dashboard milik satu website.
 ## Kebutuhan
 
 - Dapur AdeMS 2.9 atau lebih baru (layout dengan menu samping dan placeholder `menu-alat`, log error)
-- [adems/dapur-user](https://github.com/AdeMS/dapur-user) 2.6 (ikut terpasang otomatis, bersama
+- [adems/dapur-user](https://github.com/AdeMS/dapur-user) 2.7 (ikut terpasang otomatis, bersama
   [adems/dapur-email](https://github.com/AdeMS/dapur-email),
   [adems/dapur-database](https://github.com/AdeMS/dapur-database),
   [adems/dapur-asset](https://github.com/AdeMS/dapur-asset), dan
@@ -234,6 +234,22 @@ return [
 
 Website bisa memakai database sendiri lewat `config/autoload/*.local.php` miliknya. Untuk dashboard yang sama
 sekali berbeda, buat modul sendiri di folder `module/` website tanpa paket ini.
+
+## Memperbarui dari 2.9
+
+Dashboard 2.10 memakai adems/dapur-user 2.7 dan adems/dapur-berkas 1.1: foto profil kini disimpan sebagai berkas di
+folder **Foto Profil** milik akun (foto asli ikut disimpan), dan tab Profil di Pengaturan & Privasi mendapat pilihan
+**Pilih dari foto sebelumnya**. Alamat `/foto/<kode>` kini juga menerima kode berkas (22 huruf dan angka).
+
+Ubah `composer.local.json` menjadi `"adems/dapur-dashboard": "^2.10"`, jalankan `composer update` dari folder inti,
+hapus cache konfigurasi, lalu jalankan sekali:
+
+```bash
+php dapur pasang
+```
+
+Langkah `1.1-foto-profil` memindah foto profil lama dari `data/upload/avatar` ke folder **Foto Profil** tiap akun.
+Sesudahnya folder `data/upload/avatar` boleh dihapus.
 
 ## Memperbarui dari 2.8
 
